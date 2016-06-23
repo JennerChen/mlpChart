@@ -1,0 +1,20 @@
+{
+  "globals": {
+	"History":false
+  },
+  "noempty": true,
+  "noarg": true,
+  "eqeqeq": false,
+  "browser": true,
+  "browserify":true,
+  "devel":true,
+  "jquery":true,
+  "node":true,
+  "bitwise": true,
+  "curly": true,
+  "undef": true,
+  "nonew": true,
+  "forin": true,
+  "eqnull":true,
+  "lastsemic":true
+}

@@ -1,0 +1,12 @@
+# Created by .ignore support plugin (hsz.mobi)
+/idea
+.idea/.name
+.idea/deployment.xml
+.idea/encodings.xml
+.idea/misc.xml
+.idea/mlpChart.iml
+.idea/modules.xml
+.idea/workspace.xml
+
+# dev modules
+/node_modules
