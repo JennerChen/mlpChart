@@ -1,20 +1,22 @@
 /**
  * Created by zhangqing on 2016/6/23.
  */
-/** @type {obj} 导出的图表 */
+/** @type {object} 导出的图表 */
 var exportChart = require('./charts');
-/** @type {obj} 对图表的一些工具 */
+/** @type {object} 对图表的一些工具 */
 var utils = require('./util');
+require('./css/style.less');
 /**
- * @param  {string} param.wrapContainer chart外部div
- * @param  {string} param.id chart的id, 如果不指定, 则会默认生成一个id
- * @param  {[obj]} param.dataset chart数据
+ * @param  {string} params.wrapContainer chart外部div
+ * @param  {string} params.id chart的id, 如果不指定, 则会默认生成一个id
+ * @param  {Array} params.dataset chart数据
  */
 module.exports = function(params) {
 	if (typeof d3 === "undefined") {
 		console.error("缺少d3.js");
 		return;
 	}
+	
 	if (typeof _ === "undefined") {
 		console.error("缺少工具类, underscore.js");
 		return;

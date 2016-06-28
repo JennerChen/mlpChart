@@ -1,14 +1,14 @@
 module.exports = {
 	mergeConfig : function(){
 		var allConfig = Array.prototype.slice.call(arguments);
-		var config = {}
+		var config = {};
 		_.each(allConfig,function(c){
 			config = _.extend(config,c);
 		});
 		return config;
 	},
 	svgContainerProperties: function(){
-		if(!this.config) return;
+		if(!this.config) {return}
 		var svgContainer = this.config.svgContainer;
 		var widthString = svgContainer.style('width'),
 			heightString = svgContainer.style('height'),
@@ -19,6 +19,6 @@ module.exports = {
 			h: height,
 			widthString: widthString,
 			heightString: heightString
-		}
+		};
 	}
-}
+};

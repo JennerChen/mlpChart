@@ -8,8 +8,7 @@ var config = require('./webpack.config.js');
 var serverAddress = "127.0.0.1";
 var serverPort = "1288";
 var server = serverAddress+":"+serverPort;
-config.entry.unshift("webpack-dev-server/client?http://"+serverAddress+":"+serverPort+"/"
-	, "webpack/hot/dev-server"
+config.entry.unshift("webpack-dev-server/client?http://"+serverAddress+":"+serverPort+"/", "webpack/hot/dev-server"
 );
 config.plugins.unshift(new webpack.HotModuleReplacementPlugin());
 new WebpackDevServer(webpack(config),{

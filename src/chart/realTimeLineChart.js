@@ -3,7 +3,6 @@
  * @return { mlpChart } this
  */
 var realTimeLineChart = function() {
-	const api = {};
 	/** @type { mlpChart } 使用 _this 代替 this */
 	const _this = this;
 	var realTimeLineChartParams = Array.prototype.slice.call(arguments)[0] ? Array.prototype.slice.call(arguments)[0] : {};
@@ -14,16 +13,18 @@ var realTimeLineChart = function() {
 		/** @type {Array} 坐标轴距离上左下右的距离 */
 		axisMargin: [0, 20, 20, 0],
 		maxNode: 20,
-		/** @type {Func} path颜色函数 */
+		/** @type {Function} path颜色函数 */
 		color : d3.scale.category10(),
+		/** @type {boolean} 是否显示tooltip */
+		tooltip: true,
 		updateAnimationTime: 2000
-	}
+	};
 	var config = _this.utils.mergeConfig.call(_this, _this.config, commonConfig, realTimeLineChartParams);
 
 	function processData() {
 		var ds = config.dataset;
 	}
-	/** @type {obj} 内部chart变量 */
+	/** @type {object} 内部chart变量 */
 	var chartApi = null;
 	function draw() {
 		var svgContainer = config.svgContainer,
@@ -54,7 +55,7 @@ var realTimeLineChart = function() {
 				y: yFunc,
 				xaxis: d3.svg.axis().scale(xFunc).orient("bottom").ticks(5),
 				yaxis: d3.svg.axis().scale(yFunc).orient("right").ticks(5)
-			}
+			};
 		}
 		if (!config.dataReady) {
 			processData();
@@ -72,9 +73,9 @@ var realTimeLineChart = function() {
 				x: 0,
 				y: 0,
 				fill: 'transparent',
-				class: 'mlpChart-bg',
+				class: 'mlpChart-bg'
 			});
-		/** @type {obj} x,y轴 domain */
+		/** @type {object} x,y轴 domain */
 		var axis = axisDomain();
 
 		chart.append('g')
@@ -89,7 +90,7 @@ var realTimeLineChart = function() {
 				'class': 'y axis',
 				'transform': "translate(" + axis.x(0) + ",0)"
 			})
-			.call(axis.yaxis)
+			.call(axis.yaxis);
 			//draw clip
 		var clipUniqueId = 'clip_' + _.uniqueId();
 		defContainer.append('clipPath')
@@ -124,6 +125,26 @@ var realTimeLineChart = function() {
 			.attr({
 				class: 'entity'
 			})
+			.on('mouseover',function(){
+				d3.select(this)
+					.select('path').attr({
+					"stroke-width":'4px',
+					'opacity':0.9
+				});
+				d3.select(this)
+					.selectAll('circle')
+					.attr('r',5);
+			})
+			.on('mouseout',function(){
+				d3.select(this)
+					.select('path').attr({
+					"stroke-width":'2px',
+					'opacity':0.8
+				});
+				d3.select(this)
+					.selectAll('circle')
+					.attr('r',3);
+			})
 			.append('path')
 			.attr({
 				d: function(d,i){
@@ -136,24 +157,24 @@ var realTimeLineChart = function() {
 				'stroke-width':'2px',
 				'opacity':0.8
 			})
-			.on('mouseover',function(){
-				d3.select(this).attr({
-					"stroke-width":'4px',
-					'opacity':1
-				})
-			})
-			.on('mouseout',function(){
-				d3.select(this).attr({
-					"stroke-width":'2px',
-					'opacity':0.8
-				})
-			});
+			;
+		drawOrUpdatePoints();
+		function drawOrUpdatePoints(){
+			var tip = null;
 
-		chartContent
-			.selectAll('g.entity').each(function(d,i){
-				d3.select(this)
+			chartContent
+				.selectAll('g.entity').each(function(d,i){
+					d3.select(this)
 					.selectAll('circle')
 					.data(d.data)
+					.attr({
+						cx: function(cd,ci){
+							return axis.x(ci);
+						},
+						cy: function(cd,ci){
+							return axis.y(cd);
+						}
+					})
 					.enter()
 					.append('circle')
 					.attr({
@@ -165,45 +186,28 @@ var realTimeLineChart = function() {
 							return axis.y(cd);
 						},
 						fill: color(i)
+					})
+					.on('mouseover', function(d){
+						if(config.tooltip){
+							tip = d3.tip()
+								.attr('class', 'd3-tip')
+								.html(function(d) { return d; })
+								.offset(function () {
+									return [-15,0];
+								});
+							chartContent.call(tip);
+							tip.show(d);
+						}
+					})
+					.on('mouseout', function(){
+						config.tooltip && tip && tip.destroy();
 					});
-					
 			});
-			
+		}
 
-
-			
 		function update(){
 			var newDs = config.dataset;
 			axis = axisDomain();
-			chartContent
-				.selectAll('g.entity')
-				.data(newDs)
-				.select('path')
-				.attr({
-					d: function(d,i){
-						return line(d.data);
-					}
-				});
-
-			chartContent
-				.selectAll('g.entity').each(function(d,i){
-					d3.select(this)
-						.selectAll('circle')
-						.data(d.data)
-						.attr({
-							cx: function(cd,ci){
-								return axis.x(ci);
-							},
-							cy: function(cd,ci){
-								return axis.y(cd);
-							}
-						})
-						
-				});
-			animation();	
-		}
-
-		function animation(){
 			chart.select('.y.axis')
 				.transition()
 				.duration(500)
@@ -216,29 +220,44 @@ var realTimeLineChart = function() {
 
 			chartContent
 				.selectAll('g.entity')
+				.data(newDs)
+				.select('path')
+				.attr({
+					d: function(d,i){
+						return line(d.data);
+					}
+				});
+
+			drawOrUpdatePoints();
+			if(newDs[0].data.length > maxNode){
+				movingChart();
+			}
+		}
+		function movingChart(){
+			chartContent
+				.selectAll('g.entity')
 				.attr('transform',"translate(0,0)")
 				.transition()
 				.duration(config.updateAnimationTime - 30)
 				.ease("linear")
 		        .attr("transform", "translate(" + axis.x(-1) + ",0)")
 		        .each('end',function(d,i){
-		        	if(d.data.length > maxNode){
+		        	while(d.data.length > maxNode){
 		        		d.data.shift();
 		        	}
-		        })
+		        });
 		}
 		chartApi = {
 			update: update
-		}
+		};
 		return _this;
-	};
+	}
 	function update(increaseData){
-		// increaseData = [(Math.random()*100).toFixed(4),(Math.random()*100).toFixed(4)]
-		if(!chartApi) return;
+		if(!chartApi) {return}
 		var dataset = config.dataset;
-		if(increaseData.length != dataset.length ) return;
+		if(increaseData.length != dataset.length ) {return;}
 		_.each(increaseData, function(d,i){
-			dataset[i].data.push(d);
+			dataset[i].data.push(Number(d));
 		});
 		chartApi.update();
 	}
@@ -249,7 +268,7 @@ var realTimeLineChart = function() {
 
 	function setConfig(newConfig) {
 		newConfig = newConfig ? newConfig : {};
-		config = _.extend({}, config, newConfig)
+		config = _.extend({}, config, newConfig);
 	}
 	_this.api = {
 		getConfig: getConfig,
