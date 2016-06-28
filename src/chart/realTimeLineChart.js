@@ -36,7 +36,26 @@ var realTimeLineChart = function() {
 			axisMargin = config.axisMargin,
 			color = config.color,
 			maxNode = config.maxNode;
+		function axisDomain(){
+			//draw chart axis, => x
+			var xFunc = d3.scale.linear()
+				.domain([0, maxNode - 1])
+				.range([0, chartWidth]);
 
+			var	allData = [0];
+			_.each(dataset,function(d){
+				allData =allData.concat(d.data);
+			});
+			var yFunc = d3.scale.linear()
+				.domain([0,d3.max(allData)*1.1])
+				.range([chartHeight - axisMargin[2], 0]);
+			return {
+				x: xFunc,
+				y: yFunc,
+				xaxis: d3.svg.axis().scale(xFunc).orient("bottom").ticks(5),
+				yaxis: d3.svg.axis().scale(yFunc).orient("right").ticks(5)
+			}
+		}
 		if (!config.dataReady) {
 			processData();
 		}
@@ -55,28 +74,22 @@ var realTimeLineChart = function() {
 				fill: 'transparent',
 				class: 'mlpChart-bg',
 			});
+		/** @type {obj} x,y轴 domain */
+		var axis = axisDomain();
 
-		//draw chart axis, => x
-		var xFunc = d3.scale.linear()
-			.domain([0, maxNode - 1])
-			.range([0, chartWidth]);
-
-		var yFunc = d3.scale.linear()
-			.domain([0, 100])
-			.range([chartHeight - axisMargin[2], 0]);
 		chart.append('g')
 			.attr({
 				'class': 'x axis',
-				'transform': "translate(0," + yFunc(0) + ")"
+				'transform': "translate(0," + axis.y(0) + ")"
 			})
-			.call(d3.svg.axis().scale(xFunc).orient("bottom"));
+			.call(axis.xaxis);
 
 		chart.append('g')
 			.attr({
 				'class': 'y axis',
-				'transform': "translate(" + xFunc(0) + ",0)"
+				'transform': "translate(" + axis.x(0) + ",0)"
 			})
-			.call(d3.svg.axis().scale(yFunc).orient("right"))
+			.call(axis.yaxis)
 			//draw clip
 		var clipUniqueId = 'clip_' + _.uniqueId();
 		defContainer.append('clipPath')
@@ -86,15 +99,16 @@ var realTimeLineChart = function() {
 			.append('rect')
 			.attr({
 				height: chartHeight,
-				width: chartWidth
+				width: chartWidth,
+				x:1
 			});
 
 		var line = d3.svg.line()
 			.x(function(d, i) {
-				return xFunc(i);
+				return axis.x(i);
 			})
 			.y(function(d, i) {
-				return yFunc(d);
+				return axis.y(d);
 			});
 		var chartContent = chart.append('g')
 			.attr({
@@ -133,10 +147,34 @@ var realTimeLineChart = function() {
 					"stroke-width":'2px',
 					'opacity':0.8
 				})
-			})
+			});
+
+		chartContent
+			.selectAll('g.entity').each(function(d,i){
+				d3.select(this)
+					.selectAll('circle')
+					.data(d.data)
+					.enter()
+					.append('circle')
+					.attr({
+						r: 3,
+						cx: function(cd,ci){
+							return axis.x(ci);
+						},
+						cy: function(cd,ci){
+							return axis.y(cd);
+						},
+						fill: color(i)
+					});
+					
+			});
+			
+
+
 			
 		function update(){
 			var newDs = config.dataset;
+			axis = axisDomain();
 			chartContent
 				.selectAll('g.entity')
 				.data(newDs)
@@ -146,17 +184,43 @@ var realTimeLineChart = function() {
 						return line(d.data);
 					}
 				});
+
+			chartContent
+				.selectAll('g.entity').each(function(d,i){
+					d3.select(this)
+						.selectAll('circle')
+						.data(d.data)
+						.attr({
+							cx: function(cd,ci){
+								return axis.x(ci);
+							},
+							cy: function(cd,ci){
+								return axis.y(cd);
+							}
+						})
+						
+				});
 			animation();	
 		}
 
 		function animation(){
+			chart.select('.y.axis')
+				.transition()
+				.duration(500)
+				.call(axis.yaxis);
+
+			chart.select('.x.axis')
+				.transition()
+				.duration(500)
+				.call(axis.xaxis);
+
 			chartContent
 				.selectAll('g.entity')
 				.attr('transform',"translate(0,0)")
 				.transition()
-				.duration(config.updateAnimationTime - 80)
+				.duration(config.updateAnimationTime - 30)
 				.ease("linear")
-		        .attr("transform", "translate(" + xFunc(-1) + ",0)")
+		        .attr("transform", "translate(" + axis.x(-1) + ",0)")
 		        .each('end',function(d,i){
 		        	if(d.data.length > maxNode){
 		        		d.data.shift();
