@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "server": "node server.js --mode=dev",
-	"dev": "webpack --mode=dev",
+	  "dev": "webpack --mode=dev",
     "prod": "webpack --mode=prod",
     "release": "webpack --mode=release",
     "test": "echo \"Error: no test specified\" && exit 1"
