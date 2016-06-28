@@ -198,9 +198,12 @@ var realTimeLineChart = function() {
 							chartContent.call(tip);
 							tip.show(d);
 						}
+
 					})
 					.on('mouseout', function(){
-						config.tooltip && tip && tip.destroy();
+						if(config.tooltip && tip){
+							tip.destroy();
+						}
 					});
 			});
 		}
