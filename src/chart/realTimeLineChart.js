@@ -1,13 +1,13 @@
 /**
- * @param { mlpChart } this 
+ * @param { mlpChart } this
  * @return { mlpChart } this
  */
 const tooltip = require('../tooltip');
-var realTimeLineChart = function() {
-	/** @type { mlpChart } 使用 _this 代替 this */
+var realTimeLineChart = function () {
+	const axisUtil = require('../axis');
 	const _this = this;
 	var realTimeLineChartParams = Array.prototype.slice.call(arguments)[0] ? Array.prototype.slice.call(arguments)[0] : {};
-	var commonConfig = {
+	const commonConfig = {
 		/** @type {boolean} 如果传入参数含有dataset, 那么不进行数据处理, 否则处理数据以符合当前的图表(该种情况通常用于从父api中传入的参数) */
 		dataReady: realTimeLineChartParams.dataset ? true : false,
 		/** @type {Array} 图表距离上左下右的距离 */
@@ -19,7 +19,7 @@ var realTimeLineChart = function() {
 		/** @type {Number} 动画时间 */
 		updateAnimationTime: 2000,
 		/** @type {Function} path颜色函数 */
-		color : d3.scale.category10(),
+		color: d3.scale.category10(),
 		/** @type {boolean} 是否显示tooltip */
 		tooltip: true,
 		/** @type {Number} y轴最大值间距 */
@@ -30,8 +30,10 @@ var realTimeLineChart = function() {
 	function processData() {
 		var ds = config.dataset;
 	}
+
 	/** @type {object} 内部chart变量 */
 	var chartApi = null;
+
 	function draw() {
 		var svgContainer = config.svgContainer,
 			defContainer = config.defContainer,
@@ -42,46 +44,19 @@ var realTimeLineChart = function() {
 			chartHeight = svgContainerProperties.h - (margin[0] + margin[2]),
 			axisMargin = config.axisMargin,
 			color = config.color,
-			maxNode = config.maxNode;
+			maxNode = config.maxNode,
+			/** @type {object} x,y轴 api */
+			axis = null,
+			/** @type {boolean} 是否开启x轴的动画 */
+			xAxisAnimation;
 
-		function axisDomain(){
-			var	allData = [];
-			_.each(dataset,function(d){
-				allData =allData.concat(d.data);
-			});
-			var domain_x = [(_.min(allData, function(d){
-				return d.x;
-			})).x,(_.max(allData,function(d){
-				return d.x;
-			})).x];
-			// 因为要保证部分元素在界面以外, 故当超过maxNode的长度时必须扩大坐标轴范围
-			var xaxisWidth = chartWidth + chartWidth*((allData.length / dataset.length > maxNode) ? 1/maxNode : 0 )
-			//draw chart axis, => x
-			var xFunc = d3.scale.linear()
-				.domain(domain_x)
-				.range([0, xaxisWidth]);
-			var domain_y = [0, (_.max(allData,function(d){
-				return d.y;
-			})).y*config.yPadding];
-			var yFunc = d3.scale.linear()
-				.domain(domain_y)
-				.range([chartHeight - axisMargin[2], 0]);
-			return {
-				x: xFunc,
-				y: yFunc,
-				xaxis: d3.svg.axis().scale(xFunc).orient("bottom").tickFormat(function(d){
-					return _this.utils.dateFormat(d);
-				}).ticks(5),
-				yaxis: d3.svg.axis().scale(yFunc).orient("right").ticks(5)
-			};
-		}
 		if (!config.dataReady) {
 			processData();
 		}
 
 		var chart = svgContainer
 			.append('g')
-			.attr('class','chartWrap')
+			.attr('class', 'chartWrap')
 			.attr("transform", "translate(" + margin[0] + "," + margin[1] + ")");
 		//draw chart background
 		chart.append('rect')
@@ -93,23 +68,52 @@ var realTimeLineChart = function() {
 				fill: 'transparent',
 				class: 'mlpChart-bg'
 			});
-		/** @type {object} x,y轴 domain */
-		var axis = axisDomain();
+		function axisDomain(mode) {
+			var allData = [];
+			_.each(dataset, function (d) {
+				allData = allData.concat(d.data);
+			});
+			var domain_x = [(_.min(allData, function (d) {
+				return d.x;
+			})).x, (_.max(allData, function (d) {
+				return d.x;
+			})).x];
+			xAxisAnimation = allData.length / dataset.length > maxNode;
+			// 因为要保证部分元素在界面以外, 故当超过maxNode的长度时必须扩大坐标轴范围
+			var xaxisWidth = chartWidth + chartWidth * (xAxisAnimation ? 1 / maxNode : 0 );
 
-		chart.append('g')
-			.attr({
-				'class': 'x axis',
-				'transform': "translate(0," + axis.y(0) + ")"
-			})
-			.call(axis.xaxis);
+			var domain_y = [0, (_.max(allData, function (d) {
+				return d.y;
+			})).y * config.yPadding];
+			var axisConfig = {
+				domainX: domain_x,
+				domainY: domain_y,
+				rangeX: [0, xaxisWidth],
+				rangeY: [chartHeight - axisMargin[2], 0],
+				tickFormat: [function (d) {
+					return _this.utils.dateFormat(d);
+				}, null],
+				animation: [xAxisAnimation ? function (el) {
+					el.transition()
+						.duration(config.updateAnimationTime - 30)
+						.ease("linear")
+						.call(axis.xaxis);
+				} : null, function (el) {
+					el.transition()
+						.duration(500)
+						.call(axis.yaxis);
+				}]
+			};
+			return mode === 'update' ? axis.api.updateAxis(axisConfig) : axisUtil.call(chart, axisConfig);
+		}
 
-		chart.append('g')
-			.attr({
-				'class': 'y axis',
-				'transform': "translate(" + 0 + ",0)"
-			})
-			.call(axis.yaxis);
-			//draw clip
+		axis = axisDomain();
+		axis.api.drawAxis({
+			xAttr: {'transform': "translate(0," + axis.y(0) + ")"},
+			yAttr: {'transform': "translate(" + 0 + ",0)"}
+		});
+
+		//draw clip
 		var clipUniqueId = 'clip_' + _.uniqueId();
 		defContainer.append('clipPath')
 			.attr({
@@ -119,20 +123,20 @@ var realTimeLineChart = function() {
 			.attr({
 				height: chartHeight,
 				width: chartWidth,
-				x:1
+				x: 1
 			});
 
 		var line = d3.svg.line()
-			.x(function(d, i) {
+			.x(function (d, i) {
 				return axis.x(d.x);
 			})
-			.y(function(d, i) {
+			.y(function (d, i) {
 				return axis.y(d.y);
 			});
 		var chartContent = chart.append('g')
 			.attr({
-				'class':'chartContent',
-				"clip-path": "url(#"+clipUniqueId+")"
+				'class': 'chartContent',
+				"clip-path": "url(#" + clipUniqueId + ")"
 			});
 		
 		chartContent
@@ -143,153 +147,148 @@ var realTimeLineChart = function() {
 			.attr({
 				class: 'entity'
 			})
-			.on('mouseover',function(){
+			.on('mouseover', function () {
 				d3.select(this)
 					.select('path').attr({
-					"stroke-width":'4px',
-					'opacity':0.9
+					"stroke-width": '4px',
+					'opacity': 0.9
 				});
 				d3.select(this)
 					.selectAll('circle')
-					.attr('r',5);
+					.attr('r', 5);
 			})
-			.on('mouseout',function(){
+			.on('mouseout', function () {
 				d3.select(this)
 					.select('path').attr({
-					"stroke-width":'2px',
-					'opacity':0.8
+					"stroke-width": '2px',
+					'opacity': 0.8
 				});
 				d3.select(this)
 					.selectAll('circle')
-					.attr('r',3);
+					.attr('r', 3);
 			})
 			.append('path')
 			.attr({
-				d: function(d,i){
+				d: function (d, i) {
 					return line(d.data);
 				},
-				'stroke':function(d,i){
+				'stroke': function (d, i) {
 					return color(i);
 				},
-				'fill':'none',
-				'stroke-width':'2px',
-				'opacity':0.8
+				'fill': 'none',
+				'stroke-width': '2px',
+				'opacity': 0.8
 			})
-			;
+		;
 		drawOrUpdatePoints();
-		function drawOrUpdatePoints(){
+		function drawOrUpdatePoints() {
 			var tip = null;
 
 			chartContent
-				.selectAll('g.entity').each(function(d,i){
-					var currentEntity 
-						= d3.select(this)
-						.selectAll('circle')
-						.data(d.data);
-					currentEntity
-						.attr({
-							cx: function(cd,ci){
-								return axis.x(cd.x);
-							},
-							cy: function(cd,ci){
-								return axis.y(cd.y);
-							},
-							cursor:'pointer'
-						})
-						.enter()
-						.append('circle')
-						.attr({
-							r: 3,
-							cx: function(cd,ci){
-								return axis.x(cd.x);
-							},
-							cy: function(cd,ci){
-								return axis.y(cd.y);
-							},
-							fill: color(i)
-						})
-						.on('mouseover', function(d){
-							if(config.tooltip){
-								tip = tooltip()
-									.attr('class', 'd3-tip')
-									.html(function(d) {
-										var output ="";
-										_.map(d.tip,function(v,k){
-											output += "<div style='margin: 3px 0;'>"+ k +" : " + v +"</div>";
-										});
-									 	return output; 
-									})
-									.offset(function (d) {
-										return [-10,0];
+				.selectAll('g.entity').each(function (d, i) {
+				var currentEntity
+					= d3.select(this)
+					.selectAll('circle')
+					.data(d.data);
+				currentEntity
+					.attr({
+						cx: function (cd, ci) {
+							return axis.x(cd.x);
+						},
+						cy: function (cd, ci) {
+							return axis.y(cd.y);
+						},
+						cursor: 'pointer'
+					})
+					.enter()
+					.append('circle')
+					.attr({
+						r: 3,
+						cx: function (cd, ci) {
+							return axis.x(cd.x);
+						},
+						cy: function (cd, ci) {
+							return axis.y(cd.y);
+						},
+						fill: color(i)
+					})
+					.on('mouseover', function (d) {
+						if (config.tooltip) {
+							tip = tooltip()
+								.attr('class', 'd3-tip')
+								.html(function (d) {
+									var output = "";
+									_.map(d.tip, function (v, k) {
+										output += "<div style='margin: 3px 0;'>" + k + " : " + v + "</div>";
 									});
-								chartContent.call(tip);
-								tip.show(d);
-							}
+									return output;
+								})
+								.offset(function (d) {
+									return [-10, 0];
+								});
+							chartContent.call(tip);
+							tip.show(d);
+						}
 
-						})
-						.on('mouseout', function(){
-							if(config.tooltip && tip){
-								tip.destroy();
-							}
-						});
+					})
+					.on('mouseout', function () {
+						if (config.tooltip && tip) {
+							tip.destroy();
+						}
+					});
 				currentEntity
 					.exit()
 					.remove();
 			});
 		}
-		function update(){
-			var newDs = config.dataset;
-			axis = axisDomain();
-			chart.select('.y.axis')
-				.transition()
-				.duration(500)
-				.call(axis.yaxis);
 
-			chart.select('.x.axis')
-				.transition()
-				.duration(newDs[0].data.length > maxNode ? config.updateAnimationTime - 30 : 0)
-				.ease("linear")
-				.call(axis.xaxis);
-
+		function update() {
+			axis = axisDomain('update');
 			chartContent
 				.selectAll('g.entity')
-				.data(newDs)
+				.data(config.dataset)
 				.select('path')
 				.attr({
-					d: function(d,i){
+					d: function (d, i) {
 						return line(d.data);
 					}
 				});
-
 			drawOrUpdatePoints();
-			if(newDs[0].data.length > maxNode){
+			if (xAxisAnimation) {
 				movingChart();
 			}
 		}
-		function movingChart(){
+
+		function movingChart() {
 			chartContent
 				.selectAll('g.entity')
-				.attr('transform',"translate(0,0)")
+				.attr('transform', "translate(0,0)")
 				.transition()
 				.duration(config.updateAnimationTime - 30)//减少一些动画时间
 				.ease("linear")
-		        .attr("transform", "translate(" + (-chartWidth/(maxNode-1)) + ",0)")//标度尺比可显示区域大 1/maxNode, 故需要手动减去一份
-		        .each('end',function(d,i){
-		        	while(d.data.length > maxNode){
-		        		d.data.shift();
-		        	}
-		        });
+				.attr("transform", "translate(" + (-chartWidth / (maxNode - 1)) + ",0)")//标度尺比可显示区域大 1/maxNode, 故需要手动减去一份
+				.each('end', function (d, i) {
+					while (d.data.length > maxNode) {
+						d.data.shift();
+					}
+				});
 		}
+
 		chartApi = {
 			update: update
 		};
 		return _this;
 	}
-	function update(increaseData){
-		if(!chartApi) {return}
+
+	function update(increaseData) {
+		if (!chartApi) {
+			return;
+		}
 		var dataset = config.dataset;
-		if(increaseData.length != dataset.length ) {return;}
-		_.each(increaseData, function(d,i){
+		if (increaseData.length != dataset.length) {
+			return;
+		}
+		_.each(increaseData, function (d, i) {
 			dataset[i].data.push(d);
 		});
 		chartApi.update();
@@ -303,6 +302,7 @@ var realTimeLineChart = function() {
 		newConfig = newConfig ? newConfig : {};
 		config = _.extend({}, config, newConfig);
 	}
+
 	_this.api = {
 		getConfig: getConfig,
 		setConfig: setConfig,
