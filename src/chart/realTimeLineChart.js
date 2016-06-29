@@ -2,22 +2,28 @@
  * @param { mlpChart } this 
  * @return { mlpChart } this
  */
+const tooltip = require('../tooltip');
 var realTimeLineChart = function() {
 	/** @type { mlpChart } 使用 _this 代替 this */
 	const _this = this;
 	var realTimeLineChartParams = Array.prototype.slice.call(arguments)[0] ? Array.prototype.slice.call(arguments)[0] : {};
 	var commonConfig = {
+		/** @type {boolean} 如果传入参数含有dataset, 那么不进行数据处理, 否则处理数据以符合当前的图表(该种情况通常用于从父api中传入的参数) */
 		dataReady: realTimeLineChartParams.dataset ? true : false,
 		/** @type {Array} 图表距离上左下右的距离 */
 		margin: [10, 10, 10, 0],
 		/** @type {Array} 坐标轴距离上左下右的距离 */
 		axisMargin: [0, 20, 20, 0],
+		/** @type {Number} 最多显示多少个节点,当大于该节点时,会开启动画,执行 movingChart方法 */
 		maxNode: 20,
+		/** @type {Number} 动画时间 */
+		updateAnimationTime: 2000,
 		/** @type {Function} path颜色函数 */
 		color : d3.scale.category10(),
 		/** @type {boolean} 是否显示tooltip */
 		tooltip: true,
-		updateAnimationTime: 2000
+		/** @type {Number} y轴最大值间距 */
+		yPadding: 1.1
 	};
 	var config = _this.utils.mergeConfig.call(_this, _this.config, commonConfig, realTimeLineChartParams);
 
@@ -37,23 +43,35 @@ var realTimeLineChart = function() {
 			axisMargin = config.axisMargin,
 			color = config.color,
 			maxNode = config.maxNode;
-		function axisDomain(){
-			//draw chart axis, => x
-			var xFunc = d3.scale.linear()
-				.domain([0, maxNode - 1])
-				.range([0, chartWidth]);
 
-			var	allData = [0];
+		function axisDomain(){
+			var	allData = [];
 			_.each(dataset,function(d){
 				allData =allData.concat(d.data);
 			});
+			var domain_x = [(_.min(allData, function(d){
+				return d.x;
+			})).x,(_.max(allData,function(d){
+				return d.x;
+			})).x];
+			// 因为要保证部分元素在界面以外, 故当超过maxNode的长度时必须扩大坐标轴范围
+			var xaxisWidth = chartWidth + chartWidth*((allData.length / dataset.length > maxNode) ? 1/maxNode : 0 )
+			//draw chart axis, => x
+			var xFunc = d3.scale.linear()
+				.domain(domain_x)
+				.range([0, xaxisWidth]);
+			var domain_y = [0, (_.max(allData,function(d){
+				return d.y;
+			})).y*config.yPadding];
 			var yFunc = d3.scale.linear()
-				.domain([0,d3.max(allData)*1.1])
+				.domain(domain_y)
 				.range([chartHeight - axisMargin[2], 0]);
 			return {
 				x: xFunc,
 				y: yFunc,
-				xaxis: d3.svg.axis().scale(xFunc).orient("bottom").ticks(5),
+				xaxis: d3.svg.axis().scale(xFunc).orient("bottom").tickFormat(function(d){
+					return _this.utils.dateFormat(d);
+				}).ticks(5),
 				yaxis: d3.svg.axis().scale(yFunc).orient("right").ticks(5)
 			};
 		}
@@ -88,7 +106,7 @@ var realTimeLineChart = function() {
 		chart.append('g')
 			.attr({
 				'class': 'y axis',
-				'transform': "translate(" + axis.x(0) + ",0)"
+				'transform': "translate(" + 0 + ",0)"
 			})
 			.call(axis.yaxis);
 			//draw clip
@@ -106,10 +124,10 @@ var realTimeLineChart = function() {
 
 		var line = d3.svg.line()
 			.x(function(d, i) {
-				return axis.x(i);
+				return axis.x(d.x);
 			})
 			.y(function(d, i) {
-				return axis.y(d);
+				return axis.y(d.y);
 			});
 		var chartContent = chart.append('g')
 			.attr({
@@ -164,50 +182,61 @@ var realTimeLineChart = function() {
 
 			chartContent
 				.selectAll('g.entity').each(function(d,i){
-					d3.select(this)
-					.selectAll('circle')
-					.data(d.data)
-					.attr({
-						cx: function(cd,ci){
-							return axis.x(ci);
-						},
-						cy: function(cd,ci){
-							return axis.y(cd);
-						}
-					})
-					.enter()
-					.append('circle')
-					.attr({
-						r: 3,
-						cx: function(cd,ci){
-							return axis.x(ci);
-						},
-						cy: function(cd,ci){
-							return axis.y(cd);
-						},
-						fill: color(i)
-					})
-					.on('mouseover', function(d){
-						if(config.tooltip){
-							tip = d3.tip()
-								.attr('class', 'd3-tip')
-								.html(function(d) { return d; })
-								.offset(function () {
-									return [-15,0];
-								});
-							chartContent.call(tip);
-							tip.show(d);
-						}
+					var currentEntity 
+						= d3.select(this)
+						.selectAll('circle')
+						.data(d.data);
+					currentEntity
+						.attr({
+							cx: function(cd,ci){
+								return axis.x(cd.x);
+							},
+							cy: function(cd,ci){
+								return axis.y(cd.y);
+							},
+							cursor:'pointer'
+						})
+						.enter()
+						.append('circle')
+						.attr({
+							r: 3,
+							cx: function(cd,ci){
+								return axis.x(cd.x);
+							},
+							cy: function(cd,ci){
+								return axis.y(cd.y);
+							},
+							fill: color(i)
+						})
+						.on('mouseover', function(d){
+							if(config.tooltip){
+								tip = tooltip()
+									.attr('class', 'd3-tip')
+									.html(function(d) {
+										var output ="";
+										_.map(d.tip,function(v,k){
+											output += "<div style='margin: 3px 0;'>"+ k +" : " + v +"</div>";
+										});
+									 	return output; 
+									})
+									.offset(function (d) {
+										return [-10,0];
+									});
+								chartContent.call(tip);
+								tip.show(d);
+							}
 
-					})
-					.on('mouseout', function(){
-						if(config.tooltip && tip){
-							tip.destroy();
-						}
-					});
+						})
+						.on('mouseout', function(){
+							if(config.tooltip && tip){
+								tip.destroy();
+							}
+						});
+				currentEntity
+					.exit()
+					.remove();
 			});
 		}
-
 		function update(){
 			var newDs = config.dataset;
 			axis = axisDomain();
@@ -218,7 +247,8 @@ var realTimeLineChart = function() {
 
 			chart.select('.x.axis')
 				.transition()
-				.duration(500)
+				.duration(newDs[0].data.length > maxNode ? config.updateAnimationTime - 30 : 0)
+				.ease("linear")
 				.call(axis.xaxis);
 
 			chartContent
@@ -241,9 +271,9 @@ var realTimeLineChart = function() {
 				.selectAll('g.entity')
 				.attr('transform',"translate(0,0)")
 				.transition()
-				.duration(config.updateAnimationTime - 30)
+				.duration(config.updateAnimationTime - 30)//减少一些动画时间
 				.ease("linear")
-		        .attr("transform", "translate(" + axis.x(-1) + ",0)")
+		        .attr("transform", "translate(" + (-chartWidth/(maxNode-1)) + ",0)")//标度尺比可显示区域大 1/maxNode, 故需要手动减去一份
 		        .each('end',function(d,i){
 		        	while(d.data.length > maxNode){
 		        		d.data.shift();
@@ -260,7 +290,7 @@ var realTimeLineChart = function() {
 		var dataset = config.dataset;
 		if(increaseData.length != dataset.length ) {return;}
 		_.each(increaseData, function(d,i){
-			dataset[i].data.push(Number(d));
+			dataset[i].data.push(d);
 		});
 		chartApi.update();
 	}

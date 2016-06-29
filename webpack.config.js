@@ -7,7 +7,11 @@ var argv = require('yargs').argv;
 var libraryName = "mlpChart";
 var outputFileName;
 
-var plugins = [new webpack.ProvidePlugin({
+
+var plugins = [new webpack.DefinePlugin({
+	__VERSION__: JSON.stringify("1.0,0"),
+	__LIBRARYNAME__: JSON.stringify(libraryName)
+}), new webpack.ProvidePlugin({
 	$: "jquery",
 	jQuery: "jquery",
 	"window.jQuery": "jquery",
@@ -18,7 +22,9 @@ var plugins = [new webpack.ProvidePlugin({
 }), new webpack.NoErrorsPlugin()];
 if (argv.mode === 'release') {
 	outputFileName = libraryName + ".min.js";
-	plugins.push(new webpack.optimize.UglifyJsPlugin({minimize: true}));
+	plugins.push(new webpack.optimize.UglifyJsPlugin({
+		minimize: true
+	}));
 } else {
 	outputFileName = libraryName + ".js";
 }

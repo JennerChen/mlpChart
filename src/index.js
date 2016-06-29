@@ -60,5 +60,6 @@ module.exports = function(params) {
 	chart.api = null;
 	return chart;
 };
-module.exports.VERSION = "1.0.0";
+module.exports.utils = utils;
+module.exports.VERSION = __VERSION__;
 module.exports.D3VERSION = d3.version;

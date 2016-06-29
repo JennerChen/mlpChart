@@ -31,19 +31,68 @@
 	</div>
 	<script src="./vendor/jquery.min.js"></script>
 	<script src="./vendor/d3.min.js"></script>
-	<script src="./vendor/d3.tip.js"></script>
+	<!-- <script src="./vendor/d3.tip.js"></script> -->
 	<script src="./vendor/underscore-min.js"></script>
 	<script src="./lib/mlpChart.js"></script>
 	<script src="./mock.js"></script>
 	<script>
 		function getRandom(){
-			return (Math.random()*100).toFixed(4);			
+			var currentTime = _.now();
+			var randomNum = Number((Math.random()*1000).toFixed(4));
+			return {
+				x: currentTime,
+				y: randomNum,
+				tip: {
+					"开始时间": mlpChart.utils.dateFormat(currentTime - 1000,"yyyy-MM-dd hh:mm:ss"),
+					"截止时间": mlpChart.utils.dateFormat(currentTime + 1000,"yyyy-MM-dd hh:mm:ss"),
+					"投入工时变化量总和": randomNum
+				}
+			};			
 		}
 		$(function(){
+			var now = _.now();
 			var realTimeChart = mlpChart({
-				wrapContainer:'#chartWrap'
+				wrapContainer: '#chartWrap'
 			}).realTimeLineChart({
-				dataset: ds
+				maxNode: 40,
+				dataset: [{
+					data: [{
+						y: 50,
+						x: now,
+						tip: {
+							"开始时间": mlpChart.utils.dateFormat(now - 1000,"yyyy-MM-dd hh:mm:ss"),
+							"截止时间": mlpChart.utils.dateFormat(now + 1000,"yyyy-MM-dd hh:mm:ss"),
+							"投入工时变化量总和": 50
+						}
+					}],
+					name: '602Logo检测机',
+					x: {
+						name: '时间'
+					},
+					y: {
+						name: "sum(投入工时变化量)",
+						as: '投入工时变化量总和'
+					}
+				}, {
+					data: [{
+						y: 40,
+						x: now,
+						tip: {
+							"开始时间": now - 1000,
+							"截止时间": now + 1000,
+							"投入工时变化量总和": 40
+						}
+					}],
+					name: '601Logo检测机',
+					x: {
+						name: '料件',
+						as: "材料"
+					},
+					y: {
+						name: "sum(投入工时变化量)",
+						as: '投入工时变化量总和'
+					}
+				}]
 			}).api.draw();
 			setInterval(function(){
 				realTimeChart.api.update([getRandom(),getRandom()])
