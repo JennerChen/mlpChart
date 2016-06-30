@@ -26,19 +26,17 @@
 	</style>
 </head>
 <body>
-	<div id="chartWrap" style='width:800px;height:400px;background:#efefef;'>
+	<div id="chartWrap" style='width:1200px;height:400px;background:#efefef;'>
 		
 	</div>
 	<script src="./vendor/jquery.min.js"></script>
 	<script src="./vendor/d3.min.js"></script>
-	<!-- <script src="./vendor/d3.tip.js"></script> -->
 	<script src="./vendor/underscore-min.js"></script>
 	<script src="./lib/mlpChart.js"></script>
-	<script src="./mock.js"></script>
 	<script>
 		function getRandom(){
 			var currentTime = _.now();
-			var randomNum = Number((Math.random()*1000).toFixed(4));
+			var randomNum = Number((Math.random()*10000).toFixed(4));
 			return {
 				x: currentTime,
 				y: randomNum,
@@ -99,61 +97,5 @@
 			},2000)
 		})
 	</script>
-<!-- 	<script>
-var n = 40,
-    random = d3.random.normal(0, .2),
-    data = d3.range(n).map(random);
-var margin = {top: 20, right: 20, bottom: 20, left: 40},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
-var x = d3.scale.linear()
-    .domain([0, n - 1])
-    .range([0, width]);
-var y = d3.scale.linear()
-    .domain([0, 1])
-    .range([height, 0]);
-var line = d3.svg.line()
-    .x(function(d, i) { return x(i); })
-    .y(function(d, i) { return y(d); });
-var svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-svg.append("defs").append("clipPath")
-    .attr("id", "clip")
-  	.append("rect")
-    .attr("width", width)
-    .attr("height", height);
-svg.append("g")
-    .attr("class", "x axis")
-    .attr("transform", "translate(0," + y(0) + ")")
-    .call(d3.svg.axis().scale(x).orient("bottom"));
-svg.append("g")
-    .attr("class", "y axis")
-    .call(d3.svg.axis().scale(y).orient("left"));
-var path = svg.append("g")
-    .attr("clip-path", "url(#clip)")
-  .append("path")
-    .datum(data)
-    .attr("class", "line")
-    .attr("d", line);
-tick();
-function tick() {
-  // push a new data point onto the back
-  data.push(random());
-  // redraw the line, and slide it to the left
-  path
-      .attr("d", line)
-      .attr("transform", null)
-    .transition()
-      .duration(5000)
-      .ease("linear")
-      .attr("transform", "translate(" + x(-1) + ",0)")
-      .each("end", tick);
-  // pop the old data point off the front
-  data.shift();
-}
-</script> -->
 </body>
 </html>

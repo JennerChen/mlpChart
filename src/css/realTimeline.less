@@ -1,10 +1,13 @@
 .realTimeLinelegendCells{
-	opacity: 0.6;
-	&:hover{
-		opacity: 1;
-	}
 	.realTimeLinecell{
+		opacity: 0.6;
 		cursor: pointer;
+		&:hover{
+			opacity: 1;
+			text{
+				font-weight: bold;
+			}
+		}
 		&.hide{
 			opacity: 0.1 !important;
 		}

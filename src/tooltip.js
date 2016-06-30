@@ -50,15 +50,45 @@ module.exports = function () {
 		while (i--) {
 			nodel.classed(directions[i], false);
 		}
-		coords = direction_callbacks.get(dir).apply(this);
+		coords = direction_callbacks.get(dir).call(this,nodel);
+		var offsetTop = (coords.top + poffset[0]) + scrollTop,
+			offsetLeft = (coords.left + poffset[1]) + scrollLeft,
+
+			offsests=transPosition(nodel, dir, offsetTop, offsetLeft);
+
+
 		nodel.classed(dir, true).style({
-			top: (coords.top + poffset[0]) + scrollTop + 'px',
-			left: (coords.left + poffset[1]) + scrollLeft + 'px'
+			top: offsests[0] + 'px',
+			left: offsests[1] + 'px'
 		});
 
 		return tip;
 	};
-
+	function transPosition(nodel,dir,top,left){
+		var nodeWidth = Number(nodel.style('width').split('px')[0]),
+			nodeHeight = Number(nodel.style('height').split('px')[0]),
+			bodyWidth = Number(d3.select('body').style('width').split('px')[0]),
+			bodyHeight = Number(d3.select('body').style('height').split('px')[0]);
+		switch (dir){
+			case "n":
+				transDir_n();
+				break;
+			default :
+				break;
+		}
+		function transDir_n(){
+			if(d3.event.x <= nodeWidth/2){
+				left += (nodeWidth/2 - d3.event.x);
+			}
+			if(d3.event.y - 20 <= nodeHeight){
+				top += (nodeHeight - d3.event.y + 20);
+			}
+			if( bodyWidth - d3.event.x - 20 <= nodeWidth/2 ){
+				left = left - (nodeWidth/2 - bodyWidth + d3.event.x + 20);
+			}
+		}
+		return [top, left];
+	}
 	// Public - hide the tooltip
 	//
 	// Returns a tip

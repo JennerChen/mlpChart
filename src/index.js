@@ -2,9 +2,10 @@
  * Created by zhangqing on 2016/6/23.
  */
 /** @type {object} 导出的图表 */
-var exportChart = require('./charts');
+const exportChart = require('./charts');
 /** @type {object} 对图表的一些工具 */
-var utils = require('./util');
+const utils = require('./util');
+const i18n = require('./i18n/i18n.js');
 require('./css/style.less');
 /**
  * @param  {string} params.wrapContainer chart外部div
@@ -58,8 +59,10 @@ module.exports = function(params) {
 		chartId: chartId
 	};
 	chart.api = null;
+	utils.chartApiList.push(chart);
 	return chart;
 };
 module.exports.utils = utils;
 module.exports.VERSION = __VERSION__;
 module.exports.D3VERSION = d3.version;
+module.exports.LANGUAGE = i18n;
