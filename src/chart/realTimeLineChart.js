@@ -4,7 +4,7 @@
  */
 const tooltip = require('../tooltip');
 require('../css/realTimeline.less');
-var realTimeLineChart = function () {
+var realTimeLineChart = function() {
 	const axisUtil = require('../axis');
 	const legend = require('../legend.index');
 	const _this = this;
@@ -25,7 +25,13 @@ var realTimeLineChart = function () {
 		/** @type {boolean} 是否显示tooltip */
 		tooltip: true,
 		/** @type {Number} y轴最大值间距 */
-		yPadding: 1.1
+		yPadding: 1.1,
+		/** @type {Boolean} 是否显示legend */
+		legend: true,
+		/** @type {String} legend的位置 */
+		legendPosition: "zs",
+		/** @type { String} legend的摆放方式 */
+		legendOriention: "vertical"
 	};
 	var config = _this.utils.mergeConfig.call(_this, _this.config, commonConfig, realTimeLineChartParams);
 
@@ -50,7 +56,8 @@ var realTimeLineChart = function () {
 			/** @type {object} x,y轴 api */
 			axis = null,
 			/** @type {boolean} 是否开启x轴的动画 */
-			xAxisAnimation;
+			xAxisAnimation = false,
+			legendApi = null;
 
 		if (!config.dataReady) {
 			processData();
@@ -70,74 +77,80 @@ var realTimeLineChart = function () {
 				fill: 'transparent',
 				class: 'mlpChart-bg'
 			});
-		function drawLegend(){
+
+		function drawLegend() {
 			var domain_legend = [],
 				range_legend = [];
-			_.map(dataset, function(d,i){
+			_.map(dataset, function(d, i) {
 				domain_legend.push(d.name);
 				range_legend.push(color(i));
 			})
-			var ordinal = d3.scale.ordinal()
-			  .domain(domain_legend)
-			  .range(range_legend);
+			legendApi = legend.defaultLegend.call(chart, {
+				type: 'ordinal',
+				position: config.legendPosition,
+				scale_domain: domain_legend,
+				scale_range: range_legend,
+				classPrefix: 'realTimeLine',
+				orient: config.legendOriention,
+				// transOffset: [40,10],
+				cellclick: function(name) {
+					if (d3.select(this).classed('hide')) {
+						d3.select(this).classed('hide', false);
+						chartContent
+							.selectAll('g.entity')
+							.each(function(d) {
+								if (d.name === name) {
+									d3.select(this).style('opacity', "1");
+								}
+							});
+					} else {
+						d3.select(this).classed('hide', true);
+						chartContent
+							.selectAll('g.entity')
+							.each(function(d) {
+								if (d.name === name) {
+									d3.select(this).style('opacity', "0.1");
+								}
+							});
+					}
 
-			chart.append("g")
-			   .attr("class", "legendOrdinal")
-			   .attr("transform", "translate(40,10)");
-
-			 var legendOrdinal = legend.color()
-			   .shape("path", d3.svg.symbol().type("circle").size(150)())
-			   .shapePadding(5)
-			   .labelOffset(5)
-			   .classPrefix('realTimeLine')
-			   .scale(ordinal)
-			   .on("cellclick", function(name){
-			   		if(d3.select(this).classed('hide')){
-			   			d3.select(this).classed('hide',false);
-			   			chartContent
-			   				.selectAll('g.entity')
-			   				.each(function(d){
-			   					if(d.name === name){
-			   						d3.select(this).style('opacity',"1");
-			   					}
-			   				});
-			   		}else{
-			   			d3.select(this).classed('hide',true);
-			   			chartContent
-			   				.selectAll('g.entity')
-			   				.each(function(d){
-			   					if(d.name === name){
-			   						d3.select(this).style('opacity',"0.1");
-			   					}
-			   				});
-			   		}
-			 		
-			   	})
-			   .on('cellover',function(name){
-
-			   })
-			   .on('cellout',function(name){
-
-			   })
-			chart.select(".legendOrdinal")
-			   .call(legendOrdinal);
+				},
+				cellover: function(name) {
+					chartContent
+						.selectAll('g.entity')
+						.each(function(d) {
+							if (d.name === name) {
+								lineMouseover.call(this);
+							}
+						});
+				},
+				cellout: function(name) {
+					chartContent
+						.selectAll('g.entity')
+						.each(function(d) {
+							if (d.name === name) {
+								lineMouseout.call(this);
+							}
+						});
+				}
+			})
 		}
-		drawLegend();
+
 		function axisDomain(mode) {
 			var allData = [];
-			_.each(dataset, function (d) {
+			_.each(dataset, function(d) {
 				allData = allData.concat(d.data);
 			});
-			var domain_x = [(_.min(allData, function (d) {
+			var domain_x = [(_.min(allData, function(d) {
 				return d.x;
-			})).x, (_.max(allData, function (d) {
+			})).x, (_.max(allData, function(d) {
 				return d.x;
 			})).x];
 			xAxisAnimation = allData.length / dataset.length > maxNode;
 			// 因为要保证部分元素在界面以外, 故当超过maxNode的长度时必须扩大坐标轴范围
-			var xaxisWidth = chartWidth + chartWidth * (xAxisAnimation ? 1 / maxNode : 0 );
+			var xaxisWidth = chartWidth + chartWidth * (xAxisAnimation ? 1 / maxNode : 0);
 
-			var domain_y = [0, (_.max(allData, function (d) {
+			var domain_y = [0, (_.max(allData, function(d) {
 				return d.y;
 			})).y * config.yPadding];
 			var axisConfig = {
@@ -145,15 +158,15 @@ var realTimeLineChart = function () {
 				domainY: domain_y,
 				rangeX: [0, xaxisWidth],
 				rangeY: [chartHeight - axisMargin[2], 0],
-				tickFormat: [function (d) {
+				tickFormat: [function(d) {
 					return _this.utils.dateFormat(d);
 				}, null],
-				animation: [xAxisAnimation ? function (el) {
+				animation: [xAxisAnimation ? function(el) {
 					el.transition()
 						.duration(config.updateAnimationTime - 30)
 						.ease("linear")
 						.call(axis.xaxis);
-				} : null, function (el) {
+				} : null, function(el) {
 					el.transition()
 						.duration(500)
 						.call(axis.yaxis);
@@ -162,10 +175,18 @@ var realTimeLineChart = function () {
 			return mode === 'update' ? axis.api.updateAxis(axisConfig) : axisUtil.call(chart, axisConfig);
 		}
 
+		if (config.legend) {
+			drawLegend();
+		}
+		
 		axis = axisDomain();
 		axis.api.drawAxis({
-			xAttr: {'transform': "translate(0," + axis.y(0) + ")"},
-			yAttr: {'transform': "translate(" + 0 + ",0)"}
+			xAttr: {
+				'transform': "translate(0," + axis.y(0) + ")"
+			},
+			yAttr: {
+				'transform': "translate(" + 0 + ",0)"
+			}
 		});
 
 		//draw clip
@@ -182,10 +203,10 @@ var realTimeLineChart = function () {
 			});
 
 		var line = d3.svg.line()
-			.x(function (d, i) {
+			.x(function(d, i) {
 				return axis.x(d.x);
 			})
-			.y(function (d, i) {
+			.y(function(d, i) {
 				return axis.y(d.y);
 			});
 		var chartContent = chart.append('g')
@@ -193,7 +214,7 @@ var realTimeLineChart = function () {
 				'class': 'chartContent',
 				"clip-path": "url(#" + clipUniqueId + ")"
 			});
-		
+
 		chartContent
 			.selectAll('g.entity')
 			.data(dataset)
@@ -202,99 +223,102 @@ var realTimeLineChart = function () {
 			.attr({
 				class: 'entity'
 			})
-			.on('mouseover', function () {
-				d3.select(this)
-					.select('path').attr({
-					"stroke-width": '4px',
-					'opacity': 0.9
-				});
-				d3.select(this)
-					.selectAll('circle')
-					.attr('r', 5);
-			})
-			.on('mouseout', function () {
-				d3.select(this)
-					.select('path').attr({
-					"stroke-width": '2px',
-					'opacity': 0.8
-				});
-				d3.select(this)
-					.selectAll('circle')
-					.attr('r', 3);
-			})
+			.on('mouseover', lineMouseover)
+			.on('mouseout', lineMouseout)
 			.append('path')
 			.attr({
-				d: function (d, i) {
+				d: function(d, i) {
 					return line(d.data);
 				},
-				'stroke': function (d, i) {
+				'stroke': function(d, i) {
 					return color(i);
 				},
 				'fill': 'none',
 				'stroke-width': '2px',
 				'opacity': 0.8
-			})
-		;
+			});
 		drawOrUpdatePoints();
+
+		function lineMouseout() {
+			d3.select(this)
+				.select('path').attr({
+					"stroke-width": '2px',
+					'opacity': 0.8
+				});
+			d3.select(this)
+				.selectAll('circle')
+				.attr('r', 3);
+		}
+
+		function lineMouseover() {
+			d3.select(this)
+				.select('path').attr({
+					"stroke-width": '4px',
+					'opacity': 0.9
+				});
+			d3.select(this)
+				.selectAll('circle')
+				.attr('r', 5);
+		}
+
 		function drawOrUpdatePoints() {
 			var tip = null;
 
 			chartContent
-				.selectAll('g.entity').each(function (d, i) {
-				var currentEntity
-					= d3.select(this)
-					.selectAll('circle')
-					.data(d.data);
-				currentEntity
-					.attr({
-						cx: function (cd, ci) {
-							return axis.x(cd.x);
-						},
-						cy: function (cd, ci) {
-							return axis.y(cd.y);
-						},
-						cursor: 'pointer'
-					})
-					.enter()
-					.append('circle')
-					.attr({
-						r: 3,
-						cx: function (cd, ci) {
-							return axis.x(cd.x);
-						},
-						cy: function (cd, ci) {
-							return axis.y(cd.y);
-						},
-						fill: color(i)
-					})
-					.on('mouseover', function (d) {
-						if (config.tooltip) {
-							tip = tooltip()
-								.attr('class', 'd3-tip')
-								.html(function (d) {
-									var output = "";
-									_.map(d.tip, function (v, k) {
-										output += "<div style='margin: 3px 0;'>" + k + " : " + v + "</div>";
+				.selectAll('g.entity').each(function(d, i) {
+					var currentEntity = d3.select(this)
+						.selectAll('circle')
+						.data(d.data);
+					currentEntity
+						.attr({
+							cx: function(cd, ci) {
+								return axis.x(cd.x);
+							},
+							cy: function(cd, ci) {
+								return axis.y(cd.y);
+							},
+							cursor: 'pointer'
+						})
+						.enter()
+						.append('circle')
+						.attr({
+							r: 3,
+							cx: function(cd, ci) {
+								return axis.x(cd.x);
+							},
+							cy: function(cd, ci) {
+								return axis.y(cd.y);
+							},
+							fill: color(i)
+						})
+						.on('mouseover', function(d) {
+							if (config.tooltip) {
+								tip = tooltip()
+									.attr('class', 'd3-tip')
+									.html(function(d) {
+										var output = "";
+										_.map(d.tip, function(v, k) {
+											output += "<div style='margin: 3px 0;'>" + k + " : " + v + "</div>";
+										});
+										return output;
+									})
+									.offset(function(d) {
+										return [-10, 0];
 									});
-									return output;
-								})
-								.offset(function (d) {
-									return [-10, 0];
-								});
-							chartContent.call(tip);
-							tip.show(d);
-						}
+								chartContent.call(tip);
+								tip.show(d);
+							}
 
-					})
-					.on('mouseout', function () {
-						if (config.tooltip && tip) {
-							tip.destroy();
-						}
-					});
-				currentEntity
-					.exit()
-					.remove();
-			});
+						})
+						.on('mouseout', function() {
+							if (config.tooltip && tip) {
+								tip.destroy();
+							}
+						});
+					currentEntity
+						.exit()
+						.remove();
+				});
 		}
 
 		function update() {
@@ -304,7 +328,7 @@ var realTimeLineChart = function () {
 				.data(config.dataset)
 				.select('path')
 				.attr({
-					d: function (d, i) {
+					d: function(d, i) {
 						return line(d.data);
 					}
 				});
@@ -319,18 +343,29 @@ var realTimeLineChart = function () {
 				.selectAll('g.entity')
 				.attr('transform', "translate(0,0)")
 				.transition()
-				.duration(config.updateAnimationTime - 30)//减少一些动画时间
+				.duration(config.updateAnimationTime - 30) //减少一些动画时间
 				.ease("linear")
-				.attr("transform", "translate(" + (-chartWidth / (maxNode - 1)) + ",0)")//标度尺比可显示区域大 1/maxNode, 故需要手动减去一份
-				.each('end', function (d, i) {
+				.attr("transform", "translate(" + (-chartWidth / (maxNode - 1)) + ",0)") //标度尺比可显示区域大 1/maxNode, 故需要手动减去一份
+				.each('end', function(d, i) {
 					while (d.data.length > maxNode) {
 						d.data.shift();
 					}
 				});
 		}
+		/**
+		 * 移除chart中所有元素
+		 * @return {[type]} [description]
+		 */
+		function remove(){
+			chart.remove();
+			axis = null;
+			legendApi = null;
+		}
 
 		chartApi = {
-			update: update
+			update: update,
+			legendApi: legendApi,
+			remove: remove
 		};
 		return _this;
 	}
@@ -343,26 +378,35 @@ var realTimeLineChart = function () {
 		if (increaseData.length != dataset.length) {
 			return;
 		}
-		_.each(increaseData, function (d, i) {
+		_.each(increaseData, function(d, i) {
 			dataset[i].data.push(d);
 		});
 		chartApi.update();
+		return this;
 	}
-
+	function redraw(){
+		if(chartApi) {
+			chartApi.remove();
+		}
+		return draw();
+	}
 	function getConfig() {
+		chartApi.legendApi.remove();
 		return config;
 	}
 
 	function setConfig(newConfig) {
 		newConfig = newConfig ? newConfig : {};
 		config = _.extend({}, config, newConfig);
+		return this;
 	}
 
 	_this.api = {
 		getConfig: getConfig,
 		setConfig: setConfig,
 		draw: draw,
-		update: update
+		update: update,
+		redraw: redraw
 	};
 	return _this;
 };
