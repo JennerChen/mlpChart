@@ -145,7 +145,7 @@ function defaultLegend() {
 			transY += -40;
 			tarnsX += nodeMatrix.width - legendElMatrix.width;
 			transY += nodeMatrix.height  - legendElMatrix.height ;
-		}	
+		}
 		legendEl.attr("transform", "translate(" + tarnsX + "," + transY + ")");
 	}
 	legendApi.remove = function(){

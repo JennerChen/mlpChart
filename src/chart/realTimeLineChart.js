@@ -179,6 +179,7 @@ var realTimeLineChart = function() {
 			drawLegend();
 		}
 
+
 		axis = axisDomain();
 		axis.api.drawAxis({
 			xAttr: {
