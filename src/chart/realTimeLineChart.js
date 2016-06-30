@@ -3,8 +3,10 @@
  * @return { mlpChart } this
  */
 const tooltip = require('../tooltip');
+require('../css/realTimeline.less');
 var realTimeLineChart = function () {
 	const axisUtil = require('../axis');
+	const legend = require('../legend.index');
 	const _this = this;
 	var realTimeLineChartParams = Array.prototype.slice.call(arguments)[0] ? Array.prototype.slice.call(arguments)[0] : {};
 	const commonConfig = {
@@ -68,6 +70,59 @@ var realTimeLineChart = function () {
 				fill: 'transparent',
 				class: 'mlpChart-bg'
 			});
+		function drawLegend(){
+			var domain_legend = [],
+				range_legend = [];
+			_.map(dataset, function(d,i){
+				domain_legend.push(d.name);
+				range_legend.push(color(i));
+			})
+			var ordinal = d3.scale.ordinal()
+			  .domain(domain_legend)
+			  .range(range_legend);
+
+			chart.append("g")
+			   .attr("class", "legendOrdinal")
+			   .attr("transform", "translate(40,10)");
+
+			 var legendOrdinal = legend.color()
+			   .shape("path", d3.svg.symbol().type("circle").size(150)())
+			   .shapePadding(5)
+			   .labelOffset(5)
+			   .classPrefix('realTimeLine')
+			   .scale(ordinal)
+			   .on("cellclick", function(name){
+			   		if(d3.select(this).classed('hide')){
+			   			d3.select(this).classed('hide',false);
+			   			chartContent
+			   				.selectAll('g.entity')
+			   				.each(function(d){
+			   					if(d.name === name){
+			   						d3.select(this).style('opacity',"1");
+			   					}
+			   				});
+			   		}else{
+			   			d3.select(this).classed('hide',true);
+			   			chartContent
+			   				.selectAll('g.entity')
+			   				.each(function(d){
+			   					if(d.name === name){
+			   						d3.select(this).style('opacity',"0.1");
+			   					}
+			   				});
+			   		}
+			 		
+			   	})
+			   .on('cellover',function(name){
+
+			   })
+			   .on('cellout',function(name){
+
+			   })
+			chart.select(".legendOrdinal")
+			   .call(legendOrdinal);
+		}
+		drawLegend();
 		function axisDomain(mode) {
 			var allData = [];
 			_.each(dataset, function (d) {
