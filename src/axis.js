@@ -12,7 +12,7 @@ var axisUtil = function () {
 		/** @type {Array} x,y坐标轴最多显示多少坐标 */
 		ticks: [5, 5],
 		/** @tpye {Array} x,y 坐标轴 内容方向 */
-		orient: ["bottom", "right"],
+		orient: ["bottom", "left"],
 		/** @type {Array} x,y format函数 */
 		tickFormat: [null, null],
 		/** @type {string} 坐标轴类型 */
@@ -26,8 +26,10 @@ var axisUtil = function () {
 		/** @type {object} y坐标轴其他属性*/
 		yAttr: {},
 		/** @type {Array} x,y坐标轴是否进行动画*/
-		animation: [null, null]
-
+		animation: [null, null],
+		/** @type {boolean} 网格背景线 */
+		// 功能未实现
+		tableGrid: false
 	};
 	var axisParams = Array.prototype.slice.call(arguments)[0] ? Array.prototype.slice.call(arguments)[0] : {};
 	var config = _.extend({}, commonConfig, axisParams);
@@ -74,6 +76,15 @@ var axisUtil = function () {
 			.attr(attrParams.xAttr ? _.extend(config.xAttr,attrParams.xAttr) :config.xAttr)
 			.call(axis.xaxis);
 
+		// _this.selectAll("g."+(_.compact(config.xClass.split(' '))).join('.') +" g.tick")
+		// 	.append('line')
+		// 	.classed('grid-line',true)
+		// 	.attr({
+		// 		x1: 0,
+		// 		y1: 0,
+		// 		x2: 0,
+		// 		y2: -axis.y(0)
+		// 	})
 		_this.append('g')
 			.attr('class',config.yClass)
 			.attr(attrParams.yAttr ? _.extend(config.yAttr,attrParams.yAttr) :config.yAttr)

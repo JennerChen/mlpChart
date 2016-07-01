@@ -7,15 +7,18 @@ require('../css/realTimeline.less');
 var realTimeLineChart = function() {
 	const axisUtil = require('../axis');
 	const legend = require('../legend.index');
+	const brush = require('../brush');
 	const _this = this;
 	var realTimeLineChartParams = Array.prototype.slice.call(arguments)[0] ? Array.prototype.slice.call(arguments)[0] : {};
 	const commonConfig = {
 		/** @type {boolean} 如果传入参数含有dataset, 那么不进行数据处理, 否则处理数据以符合当前的图表(该种情况通常用于从父api中传入的参数) */
 		dataReady: realTimeLineChartParams.dataset ? true : false,
 		/** @type {Array} 图表距离上左下右的距离 */
-		margin: [10, 10, 10, 0],
+		margin: [10, 60, 25, 10],
 		/** @type {Array} 坐标轴距离上左下右的距离 */
-		axisMargin: [0, 20, 20, 0],
+		// 不使用了
+		// xaxisTrans: [0, 0],
+		// yaxisTrans: [0, 0],
 		/** @type {Number} 最多显示多少个节点,当大于该节点时,会开启动画,执行 movingChart方法 */
 		maxNode: 20,
 		/** @type {Number} 动画时间 */
@@ -26,12 +29,20 @@ var realTimeLineChart = function() {
 		tooltip: true,
 		/** @type {Number} y轴最大值间距 */
 		yPadding: 1.1,
+		/** @type {String} line折线图, area面积图 */
+		fillType: "line",
+		/** @type {String} 线条/面积的类型 */
+		interpolate: "linear",
+		/** @type {Boolean} 是否显示图标上的点 */
+		dotPoints: true,
 		/** @type {Boolean} 是否显示legend */
 		legend: true,
 		/** @type {String} legend的位置 */
 		legendPosition: "zs",
 		/** @type { String} legend的摆放方式 */
-		legendOriention: "vertical"
+		legendOriention: "vertical",
+		/** @type { boolean } brush模块是否启用*/
+		brushModule: false
 	};
 	var config = _this.utils.mergeConfig.call(_this, _this.config, commonConfig, realTimeLineChartParams);
 
@@ -50,14 +61,14 @@ var realTimeLineChart = function() {
 			margin = config.margin,
 			chartWidth = svgContainerProperties.w - (margin[1] + margin[3]),
 			chartHeight = svgContainerProperties.h - (margin[0] + margin[2]),
-			axisMargin = config.axisMargin,
 			color = config.color,
 			maxNode = config.maxNode,
 			/** @type {object} x,y轴 api */
 			axis = null,
 			/** @type {boolean} 是否开启x轴的动画 */
 			xAxisAnimation = false,
-			legendApi = null;
+			legendApi = null,
+			brushApi = null;
 
 		if (!config.dataReady) {
 			processData();
@@ -66,8 +77,8 @@ var realTimeLineChart = function() {
 		var chart = svgContainer
 			.append('g')
 			.attr('class', 'chartWrap')
-			.attr("transform", "translate(" + margin[0] + "," + margin[1] + ")");
-		//draw chart background
+			.attr("transform", "translate(" + margin[1] + "," + margin[0] + ")");
+		//draw chart background, may use for brush system to position outside div-css 
 		chart.append('rect')
 			.attr({
 				width: chartWidth,
@@ -146,7 +157,7 @@ var realTimeLineChart = function() {
 			})).x, (_.max(allData, function(d) {
 				return d.x;
 			})).x];
-			xAxisAnimation = allData.length / dataset.length > maxNode;
+			xAxisAnimation = (allData.length / dataset.length) > maxNode;
 			// 因为要保证部分元素在界面以外, 故当超过maxNode的长度时必须扩大坐标轴范围
 			var xaxisWidth = chartWidth + chartWidth * (xAxisAnimation ? 1 / maxNode : 0);
 
@@ -157,7 +168,7 @@ var realTimeLineChart = function() {
 				domainX: domain_x,
 				domainY: domain_y,
 				rangeX: [0, xaxisWidth],
-				rangeY: [chartHeight - axisMargin[2], 0],
+				rangeY: [chartHeight, 0],
 				tickFormat: [function(d) {
 					return _this.utils.dateFormat(d);
 				}, null],
@@ -179,14 +190,13 @@ var realTimeLineChart = function() {
 			drawLegend();
 		}
 
-
 		axis = axisDomain();
 		axis.api.drawAxis({
 			xAttr: {
-				'transform': "translate(0," + axis.y(0) + ")"
+				'transform': "translate(" + 0 + "," + (axis.y(0)) + ")"
 			},
 			yAttr: {
-				'transform': "translate(" + 0 + ",0)"
+				'transform': "translate(" + 0 + "," + 0 + ")"
 			}
 		});
 
@@ -200,16 +210,31 @@ var realTimeLineChart = function() {
 			.attr({
 				height: chartHeight,
 				width: chartWidth,
-				x: 1
+				x: 1,
+				y: 0
 			});
+		var fillTypeFunc = null;
+		if (config.fillType === 'area') {
+			fillTypeFunc = d3.svg.area()
+				.interpolate(config.interpolate)
+				.x(function(d, i) {
+					return axis.x(d.x);
+				})
+				.y0(axis.y(0))
+				.y1(function(d, i) {
+					return axis.y(d.y);
+				});
+		} else {
+			fillTypeFunc = d3.svg.line()
+				.interpolate(config.interpolate)
+				.x(function(d, i) {
+					return axis.x(d.x);
+				})
+				.y(function(d, i) {
+					return axis.y(d.y);
+				});
+		}
 
-		var line = d3.svg.line()
-			.x(function(d, i) {
-				return axis.x(d.x);
-			})
-			.y(function(d, i) {
-				return axis.y(d.y);
-			});
 		var chartContent = chart.append('g')
 			.attr({
 				'class': 'chartContent',
@@ -229,16 +254,28 @@ var realTimeLineChart = function() {
 			.append('path')
 			.attr({
 				d: function(d, i) {
-					return line(d.data);
+					return fillTypeFunc(d.data);
 				},
 				'stroke': function(d, i) {
 					return color(i);
 				},
-				'fill': 'none',
+				'fill': function(d, i) {
+					return config.fillType === 'area' ? color(i) : 'none'
+				},
 				'stroke-width': '2px',
 				'opacity': 0.8
 			});
-		drawOrUpdatePoints();
+		if (config.dotPoints) {
+			drawOrUpdatePoints();
+		}
+		if (config.brushModule ) {
+			if(!brushApi){
+				brushApi = brush.call(chart, {
+					api: _this
+				});
+			}
+			brushApi.init();
+		}
 
 		function lineMouseout() {
 			d3.select(this)
@@ -330,7 +367,7 @@ var realTimeLineChart = function() {
 				.select('path')
 				.attr({
 					d: function(d, i) {
-						return line(d.data);
+						return fillTypeFunc(d.data);
 					}
 				});
 			drawOrUpdatePoints();
@@ -357,10 +394,11 @@ var realTimeLineChart = function() {
 		 * 移除chart中所有元素
 		 * @return {[type]} [description]
 		 */
-		function remove(){
+		function remove() {
 			chart.remove();
 			axis = null;
 			legendApi = null;
+			brushApi = null;
 		}
 
 		chartApi = {
@@ -385,18 +423,21 @@ var realTimeLineChart = function() {
 		chartApi.update();
 		return this;
 	}
-	function redraw(){
-		if(chartApi) {
+
+	function redraw() {
+		if (chartApi) {
 			chartApi.remove();
 		}
 		return draw();
 	}
-	function resize(){
-		if(chartApi){
+
+	function resize() {
+		if (chartApi) {
 			redraw();
 		}
 		return this;
 	}
+
 	function getConfig() {
 		return config;
 	}

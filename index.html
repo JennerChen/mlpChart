@@ -26,7 +26,7 @@
 	</style>
 </head>
 <body>
-	<div id="chartWrap" style='width:1200px;height:400px;background:#efefef;'>
+	<div id="chartWrap" style='width:1200px;height:400px;background:#efefef;margin-top: 20px;margin-left: 20px;'>
 		
 	</div>
 	<script src="./vendor/jquery.min.js"></script>
@@ -52,7 +52,8 @@
 			var realTimeChart = mlpChart({
 				wrapContainer: '#chartWrap'
 			}).realTimeLineChart({
-				maxNode: 20,
+				maxNode: 50,
+				updateAnimationTime: 1000,
 				dataset: [{
 					data: [{
 						y: 50,
@@ -94,7 +95,7 @@
 			}).api.draw();
 			setInterval(function(){
 				realTimeChart.api.update([getRandom(),getRandom()])
-			},2000)
+			},1000)
 		})
 	</script>
 </body>

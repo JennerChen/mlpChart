@@ -64,31 +64,7 @@ module.exports = function () {
 
 		return tip;
 	};
-	function transPosition(nodel,dir,top,left){
-		var nodeWidth = Number(nodel.style('width').split('px')[0]),
-			nodeHeight = Number(nodel.style('height').split('px')[0]),
-			bodyWidth = Number(d3.select('body').style('width').split('px')[0]),
-			bodyHeight = Number(d3.select('body').style('height').split('px')[0]);
-		switch (dir){
-			case "n":
-				transDir_n();
-				break;
-			default :
-				break;
-		}
-		function transDir_n(){
-			if(d3.event.x <= nodeWidth/2){
-				left += (nodeWidth/2 - d3.event.x);
-			}
-			if(d3.event.y - 20 <= nodeHeight){
-				top += (nodeHeight - d3.event.y + 20);
-			}
-			if( bodyWidth - d3.event.x - 20 <= nodeWidth/2 ){
-				left = left - (nodeWidth/2 - bodyWidth + d3.event.x + 20);
-			}
-		}
-		return [top, left];
-	}
+	
 	// Public - hide the tooltip
 	//
 	// Returns a tip
@@ -277,7 +253,39 @@ module.exports = function () {
 			left: bbox.e.x
 		};
 	}
-
+	/**
+	 * tip在边缘时会出现无法完全显示的问题, 此方法用来修正 其位置
+	 * @param  {d3} nodel tip的元素
+	 * @param  {string} dir   tip方向
+	 * @param  {number} top   绝对定位 top大小
+	 * @param  {number} left  绝对定位 left大小
+	 * @return {[number,number]}       新的 [top,left]
+	 */
+	function transPosition(nodel,dir,top,left){
+		var nodeWidth = Number(nodel.style('width').split('px')[0]),
+			nodeHeight = Number(nodel.style('height').split('px')[0]),
+			bodyWidth = Number(d3.select('body').style('width').split('px')[0]),
+			bodyHeight = Number(d3.select('body').style('height').split('px')[0]);
+		switch (dir){
+			case "n":
+				transDir_n();
+				break;
+			default :
+				break;
+		}
+		function transDir_n(){
+			if(d3.event.x <= nodeWidth/2){
+				left += (nodeWidth/2 - d3.event.x);
+			}
+			if(d3.event.y - 20 <= nodeHeight){
+				top += (nodeHeight - d3.event.y + 20);
+			}
+			if( bodyWidth - d3.event.x - 20 <= nodeWidth/2 ){
+				left = left - (nodeWidth/2 - bodyWidth + d3.event.x + 20);
+			}
+		}
+		return [top, left];
+	}
 	function initNode() {
 		var node = d3.select(document.createElement('div'));
 		node.style({
