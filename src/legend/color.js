@@ -42,7 +42,7 @@ module.exports = function(){
 
       helper.d3_drawShapes(shape, shapes, shapeHeight, shapeWidth, shapeRadius, path);
 
-      helper.d3_addText(legendG, cellEnter, type.labels, classPrefix)
+      helper.d3_addText(legendG, cellEnter, type.labels, classPrefix);
 
       // sets placement
       var text = cell.select("text"),
@@ -71,7 +71,7 @@ module.exports = function(){
           labelOffset) + "," + (shapeSize[i].y + shapeSize[i].height/2 + 5) + ")"; };
 
       } else if (orient === "horizontal"){
-        cellTrans = function(d,i) { return "translate(" + (i * (shapeSize[i].width + shapePadding)) + ",0)"; }
+        cellTrans = function(d,i) { return "translate(" + (i * (shapeSize[i].width + shapePadding)) + ",0)"; };
         textTrans = function(d,i) { return "translate(" + (shapeSize[i].width*textAlign  + shapeSize[i].x) +
           "," + (shapeSize[i].height + shapeSize[i].y + labelOffset + 8) + ")"; };
       }

@@ -78,7 +78,7 @@ module.exports = function () {
 			return;
 		}
 		var e = event || window.event;
-		if (e.x - ctm.e < 0 || e.x - ctm.e > totalWidth) {
+		if (e.x - ctm.e < 0 || e.x - ctm.e > totalWidth - 4) {
 			return;
 		}
 		var leftBrush = brushWrapEl.querySelector('.brush-left'),
@@ -107,7 +107,8 @@ module.exports = function () {
 
 	function handleBrushMouseDown(event) {
 		var e = event || window.event;
-		if (e.x - ctm.e < 0 || e.x - ctm.e > totalWidth) {
+		//减去4是因为边框的原因
+		if (e.x - ctm.e < 0 || e.x - ctm.e > totalWidth  - 4) {
 			return;
 		}
 		brushing = true;
