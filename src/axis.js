@@ -33,7 +33,8 @@ var axisUtil = function () {
 	};
 	var axisParams = Array.prototype.slice.call(arguments)[0] ? Array.prototype.slice.call(arguments)[0] : {};
 	var config = _.extend({}, commonConfig, axisParams);
-	function switchAxisType(){
+
+	function switchAxisType() {
 		switch (config.axisType) {
 			case "linear":
 				linearAxis();
@@ -41,6 +42,7 @@ var axisUtil = function () {
 
 		}
 	}
+
 	function linearAxis() {
 		var domain_x = config.domainX,
 			domain_y = config.domainY,
@@ -73,40 +75,32 @@ var axisUtil = function () {
 
 		_this.append('g')
 			.attr('class', config.xClass)
-			.attr(attrParams.xAttr ? _.extend(config.xAttr,attrParams.xAttr) :config.xAttr)
+			.attr(attrParams.xAttr ? _.extend(config.xAttr, attrParams.xAttr) : config.xAttr)
 			.call(axis.xaxis);
 
-		// _this.selectAll("g."+(_.compact(config.xClass.split(' '))).join('.') +" g.tick")
-		// 	.append('line')
-		// 	.classed('grid-line',true)
-		// 	.attr({
-		// 		x1: 0,
-		// 		y1: 0,
-		// 		x2: 0,
-		// 		y2: -axis.y(0)
-		// 	})
 		_this.append('g')
-			.attr('class',config.yClass)
-			.attr(attrParams.yAttr ? _.extend(config.yAttr,attrParams.yAttr) :config.yAttr)
+			.attr('class', config.yClass)
+			.attr(attrParams.yAttr ? _.extend(config.yAttr, attrParams.yAttr) : config.yAttr)
 			.call(axis.yaxis);
 
 		return axis;
 	}
-	function updateAxis(){
+
+	function updateAxis() {
 		var updateParams = Array.prototype.slice.call(arguments)[0] ? Array.prototype.slice.call(arguments)[0] : {};
-		config = _.extend({},config,updateParams );
+		config = _.extend({}, config, updateParams);
 		switchAxisType();
-		var xaxisEl = _this.select("g."+(_.compact(config.xClass.split(' '))).join('.'));
-		var yaxisEl = _this.select("g."+(_.compact(config.yClass.split(' '))).join('.'));
-		if(config.animation[0]){
-			config.animation[0].call(axis,xaxisEl);
-		}else{
+		var xaxisEl = _this.select("g." + (_.compact(config.xClass.split(' '))).join('.'));
+		var yaxisEl = _this.select("g." + (_.compact(config.yClass.split(' '))).join('.'));
+		if (config.animation[0]) {
+			config.animation[0].call(axis, xaxisEl);
+		} else {
 			xaxisEl.call(axis.xaxis);
 		}
 
-		if(config.animation[1]){
-			config.animation[1].call(axis,yaxisEl);
-		}else{
+		if (config.animation[1]) {
+			config.animation[1].call(axis, yaxisEl);
+		} else {
 			yaxisEl.call(axis.yaxis);
 		}
 		return axis;

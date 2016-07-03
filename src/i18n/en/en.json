@@ -7,5 +7,12 @@
 	"4": "Thu",
 	"5": "Fri",
 	"6": "Sat"
+  },
+  "timeInfo":{
+	"day":"day",
+	"hour":"hour",
+	"minute":"minute",
+	"second":"second",
+	"millSecond":"mileSecond"
   }
 }

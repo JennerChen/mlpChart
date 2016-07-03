@@ -41,8 +41,8 @@
 				x: currentTime,
 				y: randomNum,
 				tip: {
-					"开始时间": mlpChart.utils.dateFormat(currentTime - 1000,"yyyy-MM-dd hh:mm:ss"),
-					"截止时间": mlpChart.utils.dateFormat(currentTime + 1000,"yyyy-MM-dd hh:mm:ss"),
+					"开始时间": mlpChart.utils.dateFormat(currentTime - 2000,"yyyy-MM-dd hh:mm:ss"),
+					"截止时间": mlpChart.utils.dateFormat(currentTime ,"yyyy-MM-dd hh:mm:ss"),
 					"投入工时变化量总和": randomNum
 				}
 			};			
@@ -53,14 +53,14 @@
 				wrapContainer: '#chartWrap'
 			}).realTimeLineChart({
 				maxNode: 50,
-				updateAnimationTime: 1000,
+				updateAnimationTime: 2000,
 				dataset: [{
 					data: [{
 						y: 50,
 						x: now,
 						tip: {
-							"开始时间": mlpChart.utils.dateFormat(now - 1000,"yyyy-MM-dd hh:mm:ss"),
-							"截止时间": mlpChart.utils.dateFormat(now + 1000,"yyyy-MM-dd hh:mm:ss"),
+							"开始时间": mlpChart.utils.dateFormat(now - 2000,"yyyy-MM-dd hh:mm:ss"),
+							"截止时间": mlpChart.utils.dateFormat(now ,"yyyy-MM-dd hh:mm:ss"),
 							"投入工时变化量总和": 50
 						}
 					}],
@@ -77,8 +77,8 @@
 						y: 40,
 						x: now,
 						tip: {
-							"开始时间": now - 1000,
-							"截止时间": now + 1000,
+							"开始时间": now - 2000,
+							"截止时间": now  ,
 							"投入工时变化量总和": 40
 						}
 					}],
@@ -95,7 +95,7 @@
 			}).api.draw();
 			setInterval(function(){
 				realTimeChart.api.update([getRandom(),getRandom()])
-			},1000)
+			},2000)
 		})
 	</script>
 </body>

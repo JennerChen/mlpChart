@@ -14,7 +14,7 @@ var realTimeLineChart = function() {
 		/** @type {boolean} 如果传入参数含有dataset, 那么不进行数据处理, 否则处理数据以符合当前的图表(该种情况通常用于从父api中传入的参数) */
 		dataReady: realTimeLineChartParams.dataset ? true : false,
 		/** @type {Array} 图表距离上左下右的距离 */
-		margin: [10, 60, 25, 10],
+		margin: [0, 60, 25, 0],
 		/** @type {Array} 坐标轴距离上左下右的距离 */
 		// 不使用了
 		// xaxisTrans: [0, 0],
@@ -23,6 +23,8 @@ var realTimeLineChart = function() {
 		maxNode: 20,
 		/** @type {Number} 动画时间 */
 		updateAnimationTime: 2000,
+		/** @type {Number} 处理输入时间跨度的, 此值应该与updateAnimationTime一致, 否则brush 模块会存在问题 */
+//		timeGap: 2000,
 		/** @type {Function} path颜色函数 */
 		color: d3.scale.category10(),
 		/** @type {boolean} 是否显示tooltip */
@@ -42,7 +44,9 @@ var realTimeLineChart = function() {
 		/** @type { String} legend的摆放方式 */
 		legendOriention: "vertical",
 		/** @type { boolean } brush模块是否启用*/
-		brushModule: false
+		brushModule: false,
+		/** @type {boolean} 是否允许加入新的数据 */
+		enableUpdate: true
 	};
 	var config = _this.utils.mergeConfig.call(_this, _this.config, commonConfig, realTimeLineChartParams);
 
@@ -104,7 +108,7 @@ var realTimeLineChart = function() {
 				classPrefix: 'realTimeLine',
 				orient: config.legendOriention,
 				// transOffset: [40,10],
-				cellclick: function(name) {
+				cellclick: function(name,i,e) {
 					if (d3.select(this).classed('hide')) {
 						d3.select(this).classed('hide', false);
 						chartContent
@@ -124,7 +128,6 @@ var realTimeLineChart = function() {
 								}
 							});
 					}
-
 				},
 				cellover: function(name) {
 					chartContent
@@ -156,7 +159,7 @@ var realTimeLineChart = function() {
 				return d.x;
 			})).x, (_.max(allData, function(d) {
 				return d.x;
-			})).x];
+			})).x ];
 			xAxisAnimation = (allData.length / dataset.length) > maxNode;
 			// 因为要保证部分元素在界面以外, 故当超过maxNode的长度时必须扩大坐标轴范围
 			var xaxisWidth = chartWidth + chartWidth * (xAxisAnimation ? 1 / maxNode : 0);
@@ -260,7 +263,7 @@ var realTimeLineChart = function() {
 					return color(i);
 				},
 				'fill': function(d, i) {
-					return config.fillType === 'area' ? color(i) : 'none'
+					return config.fillType === 'area' ? color(i) : 'none';
 				},
 				'stroke-width': '2px',
 				'opacity': 0.8
@@ -272,6 +275,26 @@ var realTimeLineChart = function() {
 			if(!brushApi){
 				brushApi = brush.call(chart, {
 					api: _this
+				})
+				.on('brushDataFormat',function(startPos, endPos){
+					if(!endPos){
+						endPos  = startPos;
+					}
+					var allData = [];
+					_.each(dataset, function(d) {
+						allData = allData.concat(_.pluck(d.data,'x'));
+					});
+					var cloestStart = _this.utils.findCloestNumber.call(allData, axis.x.invert(startPos),'>') ,
+						cloestEnd = _this.utils.findCloestNumber.call(allData, axis.x.invert(endPos),'<') ,
+						startWidth = axis.x(cloestStart),
+						endWidth = axis.x(cloestEnd);
+					return {
+						startText: _this.utils.dateFormat(cloestStart,'yyyy-MM-dd hh:mm:ss') ,
+						startWidth: startWidth,
+						endText: _this.utils.dateFormat(cloestEnd,'yyyy-MM-dd hh:mm:ss') ,
+						endWidth: endWidth,
+						rangeText: _this.utils.dataFormatRange(cloestEnd - cloestStart)
+					};
 				});
 			}
 			brushApi.init();
@@ -314,8 +337,7 @@ var realTimeLineChart = function() {
 							},
 							cy: function(cd, ci) {
 								return axis.y(cd.y);
-							},
-							cursor: 'pointer'
+							}
 						})
 						.enter()
 						.append('circle')
@@ -327,6 +349,7 @@ var realTimeLineChart = function() {
 							cy: function(cd, ci) {
 								return axis.y(cd.y);
 							},
+							cursor: 'pointer',
 							fill: color(i)
 						})
 						.on('mouseover', function(d) {
@@ -401,16 +424,30 @@ var realTimeLineChart = function() {
 			brushApi = null;
 		}
 
+		function dataUpdateStatus(status){
+			if(status === true){
+				config.enableUpdate = true;
+			}else if(status === false){
+				config.enableUpdate = false;
+			}else{
+				return config.enableUpdate;
+			}
+		}
 		chartApi = {
 			update: update,
-			legendApi: legendApi,
-			remove: remove
+			remove: remove,
+			dataUpdateStatus: dataUpdateStatus,
+			legendApi: legendApi
 		};
 		return _this;
 	}
 
 	function update(increaseData) {
 		if (!chartApi) {
+			return;
+		}
+		if(!chartApi.dataUpdateStatus()){
+			console.info("当前图表禁止向其添加数据");
 			return;
 		}
 		var dataset = config.dataset;
