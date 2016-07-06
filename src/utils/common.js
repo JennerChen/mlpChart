@@ -18,7 +18,7 @@ module.exports = {
 	 */
 	findCloestNumber: function (num, operation) {
 		var searchArr = this;
-		if (this instanceof Array) {
+		if (searchArr instanceof Array) {
 			return _.min(_.filter(searchArr, function (d) {
 				return operation === '<' ? num < d : num >= d;
 			}), function (n) {

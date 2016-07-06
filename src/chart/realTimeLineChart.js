@@ -109,8 +109,8 @@ var realTimeLineChart = function() {
 				orient: config.legendOriention,
 				// transOffset: [40,10],
 				cellclick: function(name,i,e) {
-					if (d3.select(this).classed('hide')) {
-						d3.select(this).classed('hide', false);
+					if (d3.select(this).classed('mlpLegendHide')) {
+						d3.select(this).classed('mlpLegendHide', false);
 						chartContent
 							.selectAll('g.entity')
 							.each(function(d) {
@@ -119,7 +119,7 @@ var realTimeLineChart = function() {
 								}
 							});
 					} else {
-						d3.select(this).classed('hide', true);
+						d3.select(this).classed('mlpLegendHide', true);
 						chartContent
 							.selectAll('g.entity')
 							.each(function(d) {
@@ -293,7 +293,7 @@ var realTimeLineChart = function() {
 						startWidth: startWidth,
 						endText: _this.utils.dateFormat(cloestEnd,'yyyy-MM-dd hh:mm:ss') ,
 						endWidth: endWidth,
-						rangeText: _this.utils.dataFormatRange(cloestEnd - cloestStart)
+						rangeText: _this.utils.dateRangeFormat(cloestEnd - cloestStart)
 					};
 				});
 			}

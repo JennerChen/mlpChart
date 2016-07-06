@@ -1,102 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-	<meta charset="UTF-8">
-	<title>MLP charts</title>
-	<link href="http://cdn.bootcss.com/normalize/4.1.1/normalize.min.css" rel="stylesheet">
-	<link href="/lib/style.css" rel="stylesheet">
-	<style>
-		*{
-			box-sizing: border-box;
-		}
-		svg {
-		  font: 10px sans-serif;
-		}
-		.line {
-		  fill: none;
-		  stroke: #000;
-		  stroke-width: 1.5px;
-		}
-		.axis path,
-		.axis line {
-		  fill: none;
-		  stroke: #000;
-		  shape-rendering: crispEdges;
-		}
-	</style>
+    <meta charset="UTF-8">
+    <title>MLP charts</title>
+    <link href="http://cdn.bootcss.com/normalize/4.1.1/normalize.min.css" rel="stylesheet">
+    <link href="http://cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/lib/style.css" rel="stylesheet">
+    <style>
+    * {
+        box-sizing: border-box;
+    }
+    
+    svg {
+        font: 10px sans-serif;
+    }
+    
+    .line {
+        fill: none;
+        stroke: #000;
+        stroke-width: 1.5px;
+    }
+    
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+    </style>
 </head>
+
 <body>
-	<div id="chartWrap" style='width:1200px;height:400px;background:#efefef;margin-top: 20px;margin-left: 20px;'>
-		
-	</div>
-	<script src="./vendor/jquery.min.js"></script>
-	<script src="./vendor/d3.min.js"></script>
-	<script src="./vendor/underscore-min.js"></script>
-	<script src="./lib/mlpChart.js"></script>
-	<script>
-		function getRandom(){
-			var currentTime = _.now();
-			var randomNum = Number((Math.random()*10000).toFixed(4));
-			return {
-				x: currentTime,
-				y: randomNum,
-				tip: {
-					"开始时间": mlpChart.utils.dateFormat(currentTime - 2000,"yyyy-MM-dd hh:mm:ss"),
-					"截止时间": mlpChart.utils.dateFormat(currentTime ,"yyyy-MM-dd hh:mm:ss"),
-					"投入工时变化量总和": randomNum
-				}
-			};			
-		}
-		$(function(){
-			var now = _.now();
-			var realTimeChart = mlpChart({
-				wrapContainer: '#chartWrap'
-			}).realTimeLineChart({
-				maxNode: 50,
-				updateAnimationTime: 2000,
-				dataset: [{
-					data: [{
-						y: 50,
-						x: now,
-						tip: {
-							"开始时间": mlpChart.utils.dateFormat(now - 2000,"yyyy-MM-dd hh:mm:ss"),
-							"截止时间": mlpChart.utils.dateFormat(now ,"yyyy-MM-dd hh:mm:ss"),
-							"投入工时变化量总和": 50
-						}
-					}],
-					name: '602Logo检测机',
-					x: {
-						name: '时间'
-					},
-					y: {
-						name: "sum(投入工时变化量)",
-						as: '投入工时变化量总和'
-					}
-				}, {
-					data: [{
-						y: 40,
-						x: now,
-						tip: {
-							"开始时间": now - 2000,
-							"截止时间": now  ,
-							"投入工时变化量总和": 40
-						}
-					}],
-					name: '601Logo检测机',
-					x: {
-						name: '料件',
-						as: "材料"
-					},
-					y: {
-						name: "sum(投入工时变化量)",
-						as: '投入工时变化量总和'
-					}
-				}]
-			}).api.draw();
-			setInterval(function(){
-				realTimeChart.api.update([getRandom(),getRandom()])
-			},2000)
-		})
-	</script>
+    
+    <div id="chartWrap" style='width:1200px;height:400px;background:#efefef;margin-top: 20px;margin-left: 20px;'>
+    </div>
+    <script src="./vendor/jquery.min.js"></script>
+    <script src="./vendor/d3.min.js"></script>
+    <script src="./vendor/underscore-min.js"></script>
+    <script type="./demos/reportServer.js"></script>
+    <script src="./lib/mlpChart.js"></script>
+    <script>
+    function getRandom() {
+        var currentTime = _.now();
+        var randomNum = Number((Math.random() * 10000).toFixed(4));
+        return {
+            x: currentTime,
+            y: randomNum,
+            tip: {
+                "开始时间": mlpChart.utils.dateFormat(currentTime - 2000, "yyyy-MM-dd hh:mm:ss"),
+                "截止时间": mlpChart.utils.dateFormat(currentTime, "yyyy-MM-dd hh:mm:ss"),
+                "投入工时变化量总和": randomNum
+            }
+        };
+    }
+    $(function() {
+        var now = _.now();
+        var realTimeChart = mlpChart({
+            wrapContainer: '#chartWrap'
+        }).realTimeLineChart({
+            maxNode: 50,
+            updateAnimationTime: 2000,
+            dataset: [{
+                data: [{
+                    y: 50,
+                    x: now,
+                    tip: {
+                        "开始时间": mlpChart.utils.dateFormat(now - 2000, "yyyy-MM-dd hh:mm:ss"),
+                        "截止时间": mlpChart.utils.dateFormat(now, "yyyy-MM-dd hh:mm:ss"),
+                        "投入工时变化量总和": 50
+                    }
+                }],
+                name: '602Logo检测机',
+                x: {
+                    name: '时间'
+                },
+                y: {
+                    name: "sum(投入工时变化量)",
+                    as: '投入工时变化量总和'
+                }
+            }, {
+                data: [{
+                    y: 40,
+                    x: now,
+                    tip: {
+                        "开始时间": now - 2000,
+                        "截止时间": now,
+                        "投入工时变化量总和": 40
+                    }
+                }],
+                name: '601Logo检测机',
+                x: {
+                    name: '料件',
+                    as: "材料"
+                },
+                y: {
+                    name: "sum(投入工时变化量)",
+                    as: '投入工时变化量总和'
+                }
+            }]
+        }).api.draw();
+        setInterval(function() {
+            realTimeChart.api.update([getRandom(), getRandom()])
+        }, 2000)
+    })
+    </script>
 </body>
+
 </html>

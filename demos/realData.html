@@ -42,11 +42,40 @@ circle {
 </style>
 
 <body>
+    <div class='container'>
+        <div class='row'>
+            <div class="col-md-12">
+                <label for="sql">查询语句
+                    <select id='defaultsql'>
+                        <option value="-1">未选择</option>
+                    </select>
+                </label>
+                <textarea id="sql" class="form-control"></textarea>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="sql">开始时间
+                    </label>
+                    <input id="startTime" class="form-control" />
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="sql">截止时间
+                    </label>
+                    <input id="endTime" class="form-control" />
+                </div>
+            </div>
+            <div class="col-md-12"><button class="btn btn-default" id='query'>查询</button></div>
+            
+        </div>
+    </div>
     <div id="chartWrap" style='width:1200px;height:400px;background:#efefef;margin-top: 30px;margin-left: 20px;'>
     </div>
     <script src="../vendor/jquery.min.js"></script>
     <script src="../vendor/d3.min.js"></script>
     <script src="../vendor/underscore-min.js"></script>
+    <script src="./reportServer.js"></script>
     <script src="../lib/mlpChart.js"></script>
     <script>
     function getRandom(curr) {

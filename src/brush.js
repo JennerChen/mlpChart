@@ -70,7 +70,9 @@ module.exports = function () {
 		document.addEventListener('mouseup', handleBrushMouseUp);
 		return brushApi;
 	}
-
+	function rePosition(){
+		
+	}
 	var brushing = false;
 
 	function handleBrushMouseMove() {
@@ -151,5 +153,6 @@ module.exports = function () {
 		}
 		return brushApi;
 	};
+	brushApi.rePosition = rePosition;
 	return brushApi;
 };

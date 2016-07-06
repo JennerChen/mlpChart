@@ -34,7 +34,7 @@ module.exports = {
 				return hour + ":" + minute + ":" + second;
 		}
 	},
-	dataFormatRange: function (range, mode) {
+	dateRangeFormat: function (range, mode) {
 		range = Number(range);
 		var modeConfig = {
 			days: true,
