@@ -35,8 +35,8 @@ var realTimeLineChart = function() {
 		legend: true,
 		/** @type {String} legend的位置 */
 		legendPosition: "zs",
-		/** @type { String} legend的摆放方式  vertical / horizontal*/
-		legendOriention: "horizontal",
+		/** @type { String} legend的摆放方式  vertical / horizontal / inline */
+		legendOriention: "vertical",
 		/** @type { boolean } brush模块是否启用*/
 		brushModule: false,
 		/** @type {boolean} 是否允许加入新的数据 */

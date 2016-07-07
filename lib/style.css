@@ -61,7 +61,7 @@
 .realTimeLinelegendCells .realTimeLinecell:hover text {
   font-weight: bold;
 }
-.realTimeLinelegendCells .realTimeLinecell.hide {
+.realTimeLinelegendCells .realTimeLinecell.mlpLegendHide {
   opacity: 0.1 !important;
 }
 .mlpBrush {
