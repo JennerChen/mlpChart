@@ -64,7 +64,7 @@ function defaultLegend() {
 			.call(legendOrdinal);
 		transPosition();
 	}
-
+	
 	function transPosition() {
 		var nodeMatrix = _this.node().getBBox(),
 			legendEl = _this.select('.' + config.legendClass),

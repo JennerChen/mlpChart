@@ -49,7 +49,7 @@ var chartServer = (function() {
 			websocket.close();
 		}
 	}
-	connect();
+	// connect();
 	db.query  = function(sql, starttime, beginTime){
 		WebSocket.send({
 
@@ -77,5 +77,7 @@ $(function(){
 		var startTime = document.getElementById('startTime').value;
 		var endTime = document.getElementById('endTime').value;
 		console.log(sql, startTime, endTime);
-	})
+	});
+	flatpickr('#startTime');
+	flatpickr('#endTime');
 })

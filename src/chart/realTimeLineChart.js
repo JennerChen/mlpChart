@@ -15,16 +15,10 @@ var realTimeLineChart = function() {
 		dataReady: realTimeLineChartParams.dataset ? true : false,
 		/** @type {Array} 图表距离上左下右的距离 */
 		margin: [0, 60, 25, 0],
-		/** @type {Array} 坐标轴距离上左下右的距离 */
-		// 不使用了
-		// xaxisTrans: [0, 0],
-		// yaxisTrans: [0, 0],
 		/** @type {Number} 最多显示多少个节点,当大于该节点时,会开启动画,执行 movingChart方法 */
 		maxNode: 20,
 		/** @type {Number} 动画时间 */
 		updateAnimationTime: 2000,
-		/** @type {Number} 处理输入时间跨度的, 此值应该与updateAnimationTime一致, 否则brush 模块会存在问题 */
-//		timeGap: 2000,
 		/** @type {Function} path颜色函数 */
 		color: d3.scale.category10(),
 		/** @type {boolean} 是否显示tooltip */
@@ -41,8 +35,8 @@ var realTimeLineChart = function() {
 		legend: true,
 		/** @type {String} legend的位置 */
 		legendPosition: "zs",
-		/** @type { String} legend的摆放方式 */
-		legendOriention: "vertical",
+		/** @type { String} legend的摆放方式  vertical / horizontal*/
+		legendOriention: "horizontal",
 		/** @type { boolean } brush模块是否启用*/
 		brushModule: false,
 		/** @type {boolean} 是否允许加入新的数据 */
@@ -107,6 +101,7 @@ var realTimeLineChart = function() {
 				scale_range: range_legend,
 				classPrefix: 'realTimeLine',
 				orient: config.legendOriention,
+				shapePadding: 5,
 				// transOffset: [40,10],
 				cellclick: function(name,i,e) {
 					if (d3.select(this).classed('mlpLegendHide')) {

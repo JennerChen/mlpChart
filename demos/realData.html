@@ -2,6 +2,7 @@
 <meta charset="utf-8">
 <link href="http://cdn.bootcss.com/normalize/4.1.1/normalize.min.css" rel="stylesheet">
 <link href="http://cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+<link href="../vendor/flatpickr.confetti.min.css" rel="stylesheet">
 <link href="../lib/style.css" rel="stylesheet">
 <style>
 svg {
@@ -56,14 +57,14 @@ circle {
                 <div class="form-group">
                     <label for="sql">开始时间
                     </label>
-                    <input id="startTime" class="form-control" />
+                    <input id="startTime" class="form-control flatpickr" data-enabletime=true data-enableseconds=true data-timeFormat="h:i:S K" data-minuteIncrement = 1/>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="form-group">
                     <label for="sql">截止时间
                     </label>
-                    <input id="endTime" class="form-control" />
+                    <input id="endTime" class="form-control flatpickr" data-enabletime=true data-enableseconds=true data-timeFormat="h:i:S K" data-minuteIncrement = 1/>
                 </div>
             </div>
             <div class="col-md-12"><button class="btn btn-default" id='query'>查询</button></div>
@@ -75,6 +76,7 @@ circle {
     <script src="../vendor/jquery.min.js"></script>
     <script src="../vendor/d3.min.js"></script>
     <script src="../vendor/underscore-min.js"></script>
+     <script src="../vendor/flatpickr.min.js"></script>
     <script src="./reportServer.js"></script>
     <script src="../lib/mlpChart.js"></script>
     <script>

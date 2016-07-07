@@ -30,7 +30,7 @@ module.exports = function(){
       legendG.enter().append('g').attr('class', classPrefix + 'legendCells');
 
 
-      var cell = legendG.selectAll("." + classPrefix + "cell").data(type.data),
+    var cell = legendG.selectAll("." + classPrefix + "cell").data(type.data),
         cellEnter = cell.enter().append("g", ".cell").attr("class", classPrefix + "cell").style("opacity", 1e-6),
         shapeEnter = cellEnter.append(shape).attr("class", classPrefix + "swatch"),
         shapes = cell.select("g." + classPrefix + "cell " + shape);
@@ -47,7 +47,7 @@ module.exports = function(){
       // sets placement
       var text = cell.select("text"),
         shapeSize = shapes[0].map( function(d){ return d.getBBox(); });
-
+       
       //sets scale
       //everything is fill except for line which is stroke,
       if (!useClass){
@@ -71,7 +71,15 @@ module.exports = function(){
           labelOffset) + "," + (shapeSize[i].y + shapeSize[i].height/2 + 5) + ")"; };
 
       } else if (orient === "horizontal"){
-        cellTrans = function(d,i) { return "translate(" + (i * (shapeSize[i].width + shapePadding)) + ",0)"; };
+        cellTrans = function(d,i) { 
+          return "translate(" + (i * (shapeSize[i].width + shapePadding)) + ",0)"; 
+        };
+        textTrans = function(d,i) { return "translate(" + (shapeSize[i].width*textAlign  + shapeSize[i].x) +
+          "," + (shapeSize[i].height + shapeSize[i].y + labelOffset + 8) + ")"; };
+      } else if(orient === "inline"){
+        cellTrans = function(d,i) { 
+          return "translate(" + (i * (shapeSize[i].width + shapePadding)) + ",0)"; 
+        };
         textTrans = function(d,i) { return "translate(" + (shapeSize[i].width*textAlign  + shapeSize[i].x) +
           "," + (shapeSize[i].height + shapeSize[i].y + labelOffset + 8) + ")"; };
       }
@@ -175,7 +183,7 @@ module.exports = function(){
   legend.orient = function(_){
     if (!arguments.length) return orient;
     _ = _.toLowerCase();
-    if (_ == "horizontal" || _ == "vertical") {
+    if (_ == "horizontal" || _ == "vertical" || _ == "inline") {
       orient = _;
     }
     return legend;
