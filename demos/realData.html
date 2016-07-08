@@ -49,6 +49,7 @@ circle {
                 <label for="sql">查询语句
                     <select id='defaultsql'>
                         <option value="-1">未选择</option>
+
                     </select>
                 </label>
                 <textarea id="sql" class="form-control"></textarea>
@@ -57,14 +58,14 @@ circle {
                 <div class="form-group">
                     <label for="sql">开始时间
                     </label>
-                    <input id="startTime" class="form-control flatpickr" data-enabletime=true data-enableseconds=true data-timeFormat="h:i:S K" data-minuteIncrement = 1/>
+                    <input id="startTime" class="form-control flatpickr"/>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="form-group">
                     <label for="sql">截止时间
                     </label>
-                    <input id="endTime" class="form-control flatpickr" data-enabletime=true data-enableseconds=true data-timeFormat="h:i:S K" data-minuteIncrement = 1/>
+                    <input id="endTime" class="form-control flatpickr"/>
                 </div>
             </div>
             <div class="col-md-12"><button class="btn btn-default" id='query'>查询</button></div>
@@ -73,6 +74,7 @@ circle {
     </div>
     <div id="chartWrap" style='width:1200px;height:400px;background:#efefef;margin-top: 30px;margin-left: 20px;'>
     </div>
+    <script src='../vendor/js.cookie.js'></script>
     <script src="../vendor/jquery.min.js"></script>
     <script src="../vendor/d3.min.js"></script>
     <script src="../vendor/underscore-min.js"></script>
@@ -97,18 +99,18 @@ circle {
         var now = parseInt(_.now() / 1000) * 1000 - 2000;
         var mockData1 = [];
         var mockData2 = [];
-        for (var i = 0; i < 100; i++) {
+        for (var i = 0; i < 10; i++) {
             mockData1.push(getRandom(now));
-            now += 10000;
+            // now += 10000;
             mockData2.push(getRandom(now));
-            now += 10000;
+            now += 20000;
         }
         var realTimeChart = mlpChart({
             wrapContainer: '#chartWrap'
         }).realTimeLineChart({
             maxNode: 100,
             updateAnimationTime: 2000,
-            // brushModule: true,
+            brushModule: true,
             // dotPoints:false,
             // fillType:'area',
             dataset: [{
@@ -140,5 +142,22 @@ circle {
         //
         //            },2000);
     })
+        function count(arr){
+            var total = 0;
+            function countForTotal(subArr){
+                total += subArr[0];
+                subArr.shift();
+                if(subArr.length > 0){
+                    console.log(this);
+                    return countForTotal(subArr);
+                }else{
+                    return total;
+                }
+            }
+            if(arr.length > 0){
+                countForTotal(arr);
+            }
+            return total;
+        }
     </script>
 </body>

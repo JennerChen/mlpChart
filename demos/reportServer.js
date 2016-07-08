@@ -1,5 +1,5 @@
-var serverIp = "127.0.0.1:8080";
-var serverWs = "ws://"+serverIp+"/factorySocket";
+var serverIp = "192.168.21.42:8080";
+var serverWs = "ws://"+serverIp+"/reportSocket";
 var chartServer = (function() {
 	var websocket = null;
 	var reconnectTimer = null;
@@ -33,7 +33,12 @@ var chartServer = (function() {
 		 */
 		websocket.onmessage = function(event) {
 			var e = event || window.event;
-			console.log(e.data);
+			if(e.data){
+				var chartData = JSON.parse(e.data).data;
+				console.log(chartData);
+			}else{
+				console.log(e)
+			}
 		};
 
 		//连接关闭的回调方法
@@ -49,16 +54,27 @@ var chartServer = (function() {
 			websocket.close();
 		}
 	}
-	// connect();
-	db.query  = function(sql, starttime, beginTime){
-		WebSocket.send({
-
+	connect();
+	db.query  = function(sql, startTime, endTime){
+		var startUtc = new Date(startTime).getTime(),
+			endUtc = new Date(endTime).getTime();
+		var message = JSON.stringify({
+			sql: sql,
+			beginTime: startUtc,
+			endTime: endUtc,
+			siloId: "default",
+			timeField: "tms",
+			timeFlag: true
 		});
+		Cookies.set('startTime', startUtc,{ expires: 7, path: '' });
+		Cookies.set('endTime', endUtc,{ expires: 7, path: '' });
+		Cookies.set('querySql', sql,{ expires: 7, path: '' });
+		websocket.send(message);
 	}
 	return db;
 })();
 $(function(){
-	var defaultSql = [1,2,3];
+	var defaultSql = ["select * from alert where entity plike \"502\" and ( message plike \"良率\" or message plike \"弹片\")  limit 100;","    select entity, count(message)  from alert group by entity order by count(message)  limit 100;",3];
 	var sqlSelector = document.getElementById('defaultsql');
 	sqlSelector.addEventListener('change',function(){
 		var sqlIndex = parseInt(this.value);
@@ -76,8 +92,23 @@ $(function(){
 		var sql = document.getElementById('sql').value;
 		var startTime = document.getElementById('startTime').value;
 		var endTime = document.getElementById('endTime').value;
-		console.log(sql, startTime, endTime);
+		chartServer.query(sql, startTime, endTime);
 	});
-	flatpickr('#startTime');
-	flatpickr('#endTime');
+	if(Cookies.get('querySql')){
+		document.getElementById('sql').value = Cookies.get('querySql');
+	}
+	flatpickr('#startTime',{
+		enableTime:true,
+		enableSeconds:true,
+		timeFormat:"h:i:S K",
+		minuteIncrement : 1,
+		defaultDate: Cookies.get('startTime') ? new Date(parseInt(Cookies.get('startTime'))) : null
+	});
+	flatpickr('#endTime',{
+		enableTime:true,
+		enableSeconds:true,
+		timeFormat:"h:i:S K",
+		minuteIncrement : 1,
+		defaultDate: Cookies.get('endTime') ? new Date(parseInt(Cookies.get('endTime'))) : null
+	});
 })

@@ -33,10 +33,12 @@ var realTimeLineChart = function() {
 		dotPoints: true,
 		/** @type {Boolean} 是否显示legend */
 		legend: true,
+		/** @type {String} 是否悬浮于页面, relative不允许浮动在图表上,此时 legendPosition无法设置为 m, absolute 允许浮动在图表上 */
+		legendDisplay: 'relative',
 		/** @type {String} legend的位置 */
 		legendPosition: "zs",
 		/** @type { String} legend的摆放方式  vertical / horizontal / inline */
-		legendOriention: "vertical",
+		legendOriention: "inline",
 		/** @type { boolean } brush模块是否启用*/
 		brushModule: false,
 		/** @type {boolean} 是否允许加入新的数据 */
@@ -71,22 +73,6 @@ var realTimeLineChart = function() {
 		if (!config.dataReady) {
 			processData();
 		}
-
-		var chart = svgContainer
-			.append('g')
-			.attr('class', 'chartWrap')
-			.attr("transform", "translate(" + margin[1] + "," + margin[0] + ")");
-		//draw chart background, may use for brush system to position outside div-css 
-		chart.append('rect')
-			.attr({
-				width: chartWidth,
-				height: chartHeight,
-				x: 0,
-				y: 0,
-				fill: 'transparent',
-				class: 'mlpChart-bg'
-			});
-
 		function drawLegend() {
 			var domain_legend = [],
 				range_legend = [];
@@ -94,7 +80,7 @@ var realTimeLineChart = function() {
 				domain_legend.push(d.name);
 				range_legend.push(color(i));
 			});
-			legendApi = legend.defaultLegend.call(chart, {
+			legendApi = legend.defaultLegend.call(svgContainer, {
 				type: 'ordinal',
 				position: config.legendPosition,
 				scale_domain: domain_legend,
@@ -143,6 +129,14 @@ var realTimeLineChart = function() {
 						});
 				}
 			});
+
+			if(config.legendDisplay === "relative"){
+				//如果 legendDisplay是 relative, 那么需要重新调整chart内容的大小， 具体大小由当前legend 决定
+				var legendBBox = legendApi.getBBox();
+				config.margin[0] =  config.margin[0] + legendBBox.height + (- legendBBox.y);
+				chartWidth = svgContainerProperties.w - (margin[1] + margin[3]);
+				chartHeight = svgContainerProperties.h - (margin[0] + margin[2]);
+			}
 		}
 
 		function axisDomain(mode) {
@@ -181,20 +175,35 @@ var realTimeLineChart = function() {
 						.call(axis.yaxis);
 				}]
 			};
-			return mode === 'update' ? axis.api.updateAxis(axisConfig) : axisUtil.call(chart, axisConfig);
+			return mode === 'update' ? axis.api.updateAxis(axisConfig) : axisUtil.call(svgContainer, axisConfig);
 		}
 
 		if (config.legend) {
 			drawLegend();
 		}
-
 		axis = axisDomain();
+		var chart = svgContainer
+			.append('g')
+			.attr('class', 'chartWrap')
+			.attr("transform", "translate(" + margin[1] + "," + margin[0] + ")");
+		// svgContainer.attr("transform", "translate(" + margin[1] + "," + margin[0] + ")");
+		//draw chart background, may use for brush system to position outside div-css 
+		chart.append('rect')
+			.attr({
+				width: chartWidth,
+				height: chartHeight,
+				x: 0,
+				y: 0,
+				fill: 'transparent',
+				class: 'mlpChart-bg'
+			});
+		
 		axis.api.drawAxis({
 			xAttr: {
-				'transform': "translate(" + 0 + "," + (axis.y(0)) + ")"
+				'transform': "translate(" + margin[1] + "," + (axis.y(0) + margin[0]) + ")"
 			},
 			yAttr: {
-				'transform': "translate(" + 0 + "," + 0 + ")"
+				'transform': "translate(" + margin[1] + "," + margin[0] + ")"
 			}
 		});
 
@@ -239,7 +248,7 @@ var realTimeLineChart = function() {
 				"clip-path": "url(#" + clipUniqueId + ")"
 			});
 
-		chartContent
+		var linePath = chartContent
 			.selectAll('g.entity')
 			.data(dataset)
 			.enter()
@@ -263,6 +272,20 @@ var realTimeLineChart = function() {
 				'stroke-width': '2px',
 				'opacity': 0.8
 			});
+		// var pathLength = linePath.node().getTotalLength();
+		linePath.each(function(){
+			var pathLength = this.getTotalLength();
+			d3.select(this)
+			    .attr("stroke-dasharray", pathLength + " " + pathLength)
+			    .attr("stroke-dashoffset", pathLength)
+			    .transition()
+		        .duration(500)
+		        .ease("ease")
+		        .attr({
+		        	"stroke-dashoffset": 0
+		        })
+		})
+		   	
 		if (config.dotPoints) {
 			drawOrUpdatePoints();
 		}
@@ -281,7 +304,7 @@ var realTimeLineChart = function() {
 					});
 					var cloestStart = _this.utils.findCloestNumber.call(allData, axis.x.invert(startPos),'>') ,
 						cloestEnd = _this.utils.findCloestNumber.call(allData, axis.x.invert(endPos),'<') ,
-						startWidth = axis.x(cloestStart),
+						startWidth = axis.x(cloestStart ),
 						endWidth = axis.x(cloestEnd);
 					return {
 						startText: _this.utils.dateFormat(cloestStart,'yyyy-MM-dd hh:mm:ss') ,

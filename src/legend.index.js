@@ -151,6 +151,9 @@ function defaultLegend() {
 	legendApi.remove = function(){
 		_this.select('.' + config.legendClass).remove();
 	};
+	legendApi.getBBox = function(){
+		return _this.select('.' + config.legendClass).node().getBBox();
+	}
 	return legendApi;
 }
 module.exports = {

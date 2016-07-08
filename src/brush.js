@@ -63,8 +63,10 @@ module.exports = function () {
 		brushWrapEl.innerHTML = config.brushTemplate();
 		brushWrap.select('.brush-left').attr('style', 'height:' + totalHeight + "px");
 		brushWrap.select('.brush-right').attr('style', 'height:' + totalHeight + "px");
-		divWrap.node().style.cursor = "crosshair";
-		divWrap.node().addEventListener('mousedown', handleBrushMouseDown);
+		_this.node().style.cursor = "crosshair";
+		_this.node().addEventListener('mousedown', handleBrushMouseDown);
+		brushWrapEl.querySelector('.brush-left').addEventListener('mousedown', handleBrushMouseDown);
+		brushWrapEl.querySelector('.brush-right').addEventListener('mousedown', handleBrushMouseDown);
 		divWrap.node().addEventListener('mouseup', handleBrushMouseUp);
 		divWrap.node().addEventListener('mousemove', handleBrushMouseMove);
 		document.addEventListener('mouseup', handleBrushMouseUp);
