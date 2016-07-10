@@ -56,7 +56,8 @@ module.exports = function(params) {
 		wrapContainer: wrapContainer,
 		svgContainer: svgContainer,
 		defContainer: defContainer,
-		chartId: chartId
+		chartId: chartId,
+		animation:true
 	};
 	chart.api = null;
 	utils.chartApiList.push(chart);

@@ -153,7 +153,7 @@ function defaultLegend() {
 	};
 	legendApi.getBBox = function(){
 		return _this.select('.' + config.legendClass).node().getBBox();
-	}
+	};
 	return legendApi;
 }
 module.exports = {

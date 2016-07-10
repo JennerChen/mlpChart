@@ -8,6 +8,7 @@ var realTimeLineChart = function() {
 	const axisUtil = require('../axis');
 	const legend = require('../legend.index');
 	const brush = require('../brush');
+	const svgAnimation = require('../animate');
 	const _this = this;
 	var realTimeLineChartParams = Array.prototype.slice.call(arguments)[0] ? Array.prototype.slice.call(arguments)[0] : {};
 	const commonConfig = {
@@ -186,8 +187,7 @@ var realTimeLineChart = function() {
 			.append('g')
 			.attr('class', 'chartWrap')
 			.attr("transform", "translate(" + margin[1] + "," + margin[0] + ")");
-		// svgContainer.attr("transform", "translate(" + margin[1] + "," + margin[0] + ")");
-		//draw chart background, may use for brush system to position outside div-css 
+		//draw chart background, may use for brush system to position outside div-css
 		chart.append('rect')
 			.attr({
 				width: chartWidth,
@@ -272,20 +272,13 @@ var realTimeLineChart = function() {
 				'stroke-width': '2px',
 				'opacity': 0.8
 			});
-		// var pathLength = linePath.node().getTotalLength();
-		linePath.each(function(){
-			var pathLength = this.getTotalLength();
-			d3.select(this)
-			    .attr("stroke-dasharray", pathLength + " " + pathLength)
-			    .attr("stroke-dashoffset", pathLength)
-			    .transition()
-		        .duration(500)
-		        .ease("ease")
-		        .attr({
-		        	"stroke-dashoffset": 0
-		        })
-		})
-		   	
+		if(config.animation){
+			var anim = svgAnimation()
+				.svgType(config.fillType === 'line' ? 'path' : 'area')
+				.duration(1000);
+			linePath.call(anim);
+		}
+
 		if (config.dotPoints) {
 			drawOrUpdatePoints();
 		}
